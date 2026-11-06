@@ -69,23 +69,28 @@ flowchart LR
 
 ## Product Preview
 
-### 1. Interactive Forensic Terminal (`/demo`)
-> **Guided walkthrough of sandwich detection, CPMM counterfactual slippage decomposition, and Arkiv proof verification.**
+### 1. Overview & Live Network Readout (`/`)
+> **Live cumulative extraction from Arkiv Rabdi (`$13.18` across 5 entities), active `RebateVault` v2 USDC reserve on Arc (`$1.46 USDC`), latest Hook v2 sandwich, and instant wallet/receipt lookup.**
+
+[![DarkTrace Overview](docs/screenshots/home.png)](https://darktrace-lovat.vercel.app)
+
+### 2. Interactive Forensic Terminal (`/demo`)
+> **Replay all three verified on-chain runs (`Verified Run #2` on Arc v2, `Hook v2 Detection` with 90-day TTL, and `Verified Run #1` on Arc v1) or run the browser simulation sandbox.**
 
 [![DarkTrace Interactive Forensic Terminal](docs/screenshots/demo-terminal.png)](https://darktrace-lovat.vercel.app/demo)
 
 <details>
-<summary><b>View Surveillance Dashboard & Extraction Receipt Screenshots</b></summary>
+<summary><b>View Surveillance Matrix (`/dashboard`) & Verified Run #2 Receipt (`/receipt/0xe191…`) Screenshots</b></summary>
 
-### 2. Forensics Surveillance Matrix (`/dashboard`)
-> **Monitored Uniswap v4 pools, the Arc vault's USDC reserve, and recent extraction receipts read live from Arkiv.**
+### 3. Forensics Surveillance Matrix (`/dashboard`)
+> **Monitored Uniswap v4 pools (`Hook v2` `0xCeF7…c0c0` and `Hook v1` `0xBCC9…80c0`), live Arc vault reserve, and extraction receipts read live from Arkiv Rabdi.**
 
 [![DarkTrace Surveillance Matrix](docs/screenshots/dashboard.png)](https://darktrace-lovat.vercel.app/dashboard)
 
-### 3. Extraction Receipt (`/receipt/0xe9e5…`)
-> **Attested loss record: the 3-tx sandwich, the canonical `receiptHash`, the Arkiv entity key and owner, and an explorer deep-link.**
+### 4. Extraction Receipt — Verified Run #2 (`/receipt/0xe191…`)
+> **Attested loss record (`$3.54 USDC`, `+35 bps` injected vs `90 bps` legit slippage in block `#55,152,258`), 4-stage pipeline progress (`Detected → Sealed on Arkiv → Attested on Arc → Rebated`), and explorer deep-links.**
 
-[![DarkTrace Forensic Receipt](docs/screenshots/receipt.png)](https://darktrace-lovat.vercel.app/receipt/0xe9e56b6adbf0cae90f08b28a0ae3dccd9fc4ece42eb7b0126e4f208646eae6ce)
+[![DarkTrace Forensic Receipt](docs/screenshots/receipt.png)](https://darktrace-lovat.vercel.app/receipt/0xe191f885168d1d06b6c7d27ef00504d58f7661c7da5adc8c3a79aaf8bb72959a)
 
 </details>
 
