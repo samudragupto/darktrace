@@ -13,6 +13,7 @@ interface IERC20Minimal {
  * @title RebateVault
  * @notice Restitution settlement vault on Arc Testnet holding USDC collateral.
  * @dev Distributes restitution to victim LPs verified against SimulationRegistry attestations.
+ *      v2: only the attestation's `beneficiary` may claim; it chooses where the USDC is sent.
  */
 contract RebateVault {
     IERC20Minimal public immutable usdc;
@@ -33,6 +34,7 @@ contract RebateVault {
     error ReentrancyGuardReentrantCall();
     error AlreadyClaimed();
     error UnverifiedReceipt();
+    error NotBeneficiary();
     error AmountExceedsAttestation();
     error InvalidRecipient();
     error SelfPayoutBlocked();
@@ -64,9 +66,11 @@ contract RebateVault {
     }
 
     /**
-     * @notice Allows an affected LP to claim USDC restitution against an attested forensic receipt.
+     * @notice Lets the attested victim claim USDC restitution against a forensic receipt.
+     * @dev Reverts with NotBeneficiary unless msg.sender is the beneficiary recorded in SimulationRegistry,
+     *      so knowing a receipt hash is not enough to take its rebate.
      * @param receiptHash Cryptographic identifier of the ExtractionReceipt.
-     * @param recipient Target address receiving the USDC rebate.
+     * @param recipient Address the beneficiary wants the USDC sent to (e.g. itself or a fresh wallet).
      * @param amountUSDC Amount requested (must not exceed attested extracted value).
      * @param proofBundle Optional cryptographic payload for auditing.
      */
@@ -85,6 +89,7 @@ contract RebateVault {
 
         (bool verified, uint256 attestedAmount, ) = simulationRegistry.getAttestation(receiptHash);
         if (!verified) revert UnverifiedReceipt();
+        if (msg.sender != simulationRegistry.beneficiaryOf(receiptHash)) revert NotBeneficiary();
         if (amountUSDC > attestedAmount) revert AmountExceedsAttestation();
 
         if (usdc.balanceOf(address(this)) < amountUSDC) revert InsufficientVaultBalance();

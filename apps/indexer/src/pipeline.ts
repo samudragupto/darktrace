@@ -49,8 +49,13 @@ export interface ProcessedPipelineResult {
   arcTxHash?: string;
 }
 
+const SIMULATION_REGISTRY_V2_ABI = parseAbi([
+  "function recordSimulation(bytes32 simulationHash, bytes32 receiptHash, uint256 extractedUSDC, address beneficiary) external",
+]);
+
 const SIMULATION_REGISTRY_ABI = parseAbi([
   "function recordSimulation(bytes32 simulationHash, bytes32 receiptHash, uint256 extractedUSDC) external",
+  "function beneficiaryOf(bytes32 receiptHash) external view returns (address)",
   "function getAttestation(bytes32 receiptHash) external view returns (bool verified, uint256 amountUSDC, bytes32 simHash)"
 ]);
 
@@ -128,6 +133,7 @@ export class ForensicPipeline {
     let injectedSlippageBps: number;
     let legitSlippageBps: number;
     let onchainTxHashes: string[] | undefined;
+    let beneficiary: `0x${string}` = event.victim;
 
     if (this.demoFast) {
       // Deterministic fast simulation calculation
@@ -176,6 +182,7 @@ export class ForensicPipeline {
         detectedLogIndex: event.logIndex,
       });
       onchainTxHashes = sandwich.txHashes;
+      beneficiary = sandwich.victimOrigin;
       const simInput: SimulationInput = sandwich.simulationInput;
 
       this.log("INFO", "RECONSTRUCTED", "Sandwich rebuilt from PoolManager Swap events", {
@@ -206,8 +213,8 @@ export class ForensicPipeline {
       poolId: event.poolId,
       searcher: event.searcher,
       victim: event.victim,
-      // Restitution party. In v4 the hook sees the victim's router as `sender`.
-      lp: event.victim,
+      // Restitution beneficiary: the wallet that signed the victim swap (the hook only sees its router).
+      lp: beneficiary,
       blockNumber: event.blockNumber,
       extractedUSDC,
       injectedSlippageBps,
@@ -249,13 +256,25 @@ export class ForensicPipeline {
           transport: http(this.arcRpcUrl),
         });
 
-        const tx = await walletClient.writeContract({
-          address: this.simulationRegistryAddress,
-          abi: SIMULATION_REGISTRY_ABI,
-          functionName: "recordSimulation",
-          args: [simulationHash, receiptHash as `0x${string}`, extractedUSDCRaw],
-        });
         const arcClient = createPublicClient({ chain: arcTestnet, transport: http(this.arcRpcUrl) });
+        // v2 registries bind the attestation to a beneficiary (the only address RebateVault lets claim).
+        const isV2 = await arcClient
+          .readContract({ address: this.simulationRegistryAddress, abi: SIMULATION_REGISTRY_ABI, functionName: "beneficiaryOf", args: [receiptHash as `0x${string}`] })
+          .then(() => true, () => false);
+        const tx = isV2
+          ? await walletClient.writeContract({
+              address: this.simulationRegistryAddress,
+              abi: SIMULATION_REGISTRY_V2_ABI,
+              functionName: "recordSimulation",
+              args: [simulationHash, receiptHash as `0x${string}`, extractedUSDCRaw, beneficiary],
+            })
+          : await walletClient.writeContract({
+              address: this.simulationRegistryAddress,
+              abi: SIMULATION_REGISTRY_ABI,
+              functionName: "recordSimulation",
+              args: [simulationHash, receiptHash as `0x${string}`, extractedUSDCRaw],
+            });
+        if (!isV2) this.log("WARN", "LEGACY_REGISTRY", "v1 SimulationRegistry: claims are not restricted to the victim", {});
         const mined = await arcClient.waitForTransactionReceipt({ hash: tx });
         if (mined.status !== "success") throw new Error(`recordSimulation reverted (tx ${tx})`);
 
@@ -265,6 +284,7 @@ export class ForensicPipeline {
         this.log("INFO", "ATTESTED", "Simulation record committed to Arc SimulationRegistry", {
           txHash: tx,
           registry: this.simulationRegistryAddress,
+          beneficiary: isV2 ? beneficiary : undefined,
         });
       } catch (err: unknown) {
         this.log("ERROR", "ATTEST_FAILED", "Failed to submit attestation to Arc", {

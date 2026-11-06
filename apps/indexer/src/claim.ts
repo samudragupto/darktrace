@@ -22,6 +22,7 @@ const USDC = "0x3600000000000000000000000000000000000000" as const;
 const ABI = parseAbi([
   "function getAttestation(bytes32 receiptHash) view returns (bool verified, uint256 amountUSDC, bytes32 simHash)",
   "function claimedReceipts(bytes32) view returns (bool)",
+  "function beneficiaryOf(bytes32) view returns (address)",
   "function claimRebate(bytes32 receiptHash, address recipient, uint256 amountUSDC, bytes proofBundle)",
   "function balanceOf(address) view returns (uint256)",
 ]);
@@ -58,6 +59,15 @@ async function main() {
   }
   if (!att[0]) throw new Error(`receipt ${rh} is not attested in SimulationRegistry ${REGISTRY}`);
   console.log(`Attested on Arc: ${att[1]} raw USDC (simulationHash ${att[2]})`);
+
+  // v2 registries name the only wallet allowed to claim; fail early with a clear message.
+  const beneficiary = await arc
+    .readContract({ address: REGISTRY, abi: ABI, functionName: "beneficiaryOf", args: [rh] })
+    .catch(() => null); // v1 registry: no beneficiary binding
+  if (beneficiary && beneficiary.toLowerCase() !== account.address.toLowerCase()) {
+    throw new Error(`only the beneficiary ${beneficiary} can claim this rebate (signer is ${account.address})`);
+  }
+  if (beneficiary) console.log(`Beneficiary: ${beneficiary} (signer matches)`);
 
   if (await arc.readContract({ address: VAULT, abi: ABI, functionName: "claimedReceipts", args: [rh] })) {
     console.log("Already claimed on Arc.");

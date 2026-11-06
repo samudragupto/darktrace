@@ -36,6 +36,8 @@ export interface ReconstructedSandwich {
   preAttackSqrtPriceX96: bigint;
   simulationInput: SimulationInput;
   txHashes: [Hex, Hex, Hex];
+  /** Wallet that signed the victim's swap transaction: the restitution beneficiary. */
+  victimOrigin: Hex;
 }
 
 const abs = (x: bigint) => (x < 0n ? -x : x);
@@ -123,10 +125,14 @@ export async function reconstructSandwich(
     preAttackReserve1: reserve1,
   };
 
+  // The hook only sees the victim's router; the person who lost money signed the victim tx.
+  const victimOrigin = (await client.getTransaction({ hash: victim.txHash })).from;
+
   return {
     frontrun,
     victim,
     backrun,
+    victimOrigin,
     preAttackSqrtPriceX96: pre,
     simulationInput,
     txHashes: [frontrun.txHash, victim.txHash, backrun.txHash],

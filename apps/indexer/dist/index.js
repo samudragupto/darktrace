@@ -25008,10 +25008,12 @@ async function reconstructSandwich(client, params) {
     preAttackReserve0: reserve0,
     preAttackReserve1: reserve1
   };
+  const victimOrigin = (await client.getTransaction({ hash: victim.txHash })).from;
   return {
     frontrun,
     victim,
     backrun,
+    victimOrigin,
     preAttackSqrtPriceX96: pre,
     simulationInput,
     txHashes: [frontrun.txHash, victim.txHash, backrun.txHash]
@@ -25026,8 +25028,12 @@ var arcTestnet = defineChain({
   nativeCurrency: { name: "USD Coin", symbol: "USDC", decimals: 6 },
   rpcUrls: { default: { http: ["https://rpc.testnet.arc.network"] } }
 });
+var SIMULATION_REGISTRY_V2_ABI = parseAbi([
+  "function recordSimulation(bytes32 simulationHash, bytes32 receiptHash, uint256 extractedUSDC, address beneficiary) external"
+]);
 var SIMULATION_REGISTRY_ABI = parseAbi([
   "function recordSimulation(bytes32 simulationHash, bytes32 receiptHash, uint256 extractedUSDC) external",
+  "function beneficiaryOf(bytes32 receiptHash) external view returns (address)",
   "function getAttestation(bytes32 receiptHash) external view returns (bool verified, uint256 amountUSDC, bytes32 simHash)"
 ]);
 var ForensicPipeline = class {
@@ -25083,6 +25089,7 @@ var ForensicPipeline = class {
     let injectedSlippageBps;
     let legitSlippageBps;
     let onchainTxHashes;
+    let beneficiary = event.victim;
     if (this.demoFast) {
       const simInput = {
         poolId: event.poolId,
@@ -25126,6 +25133,7 @@ var ForensicPipeline = class {
         detectedLogIndex: event.logIndex
       });
       onchainTxHashes = sandwich.txHashes;
+      beneficiary = sandwich.victimOrigin;
       const simInput = sandwich.simulationInput;
       this.log("INFO", "RECONSTRUCTED", "Sandwich rebuilt from PoolManager Swap events", {
         frontrunIn: sandwich.frontrun.amountInGross.toString(),
@@ -25151,8 +25159,8 @@ var ForensicPipeline = class {
       poolId: event.poolId,
       searcher: event.searcher,
       victim: event.victim,
-      // Restitution party. In v4 the hook sees the victim's router as `sender`.
-      lp: event.victim,
+      // Restitution beneficiary: the wallet that signed the victim swap (the hook only sees its router).
+      lp: beneficiary,
       blockNumber: event.blockNumber,
       extractedUSDC,
       injectedSlippageBps,
@@ -25186,20 +25194,28 @@ var ForensicPipeline = class {
           chain: arcTestnet,
           transport: http(this.arcRpcUrl)
         });
-        const tx = await walletClient.writeContract({
+        const arcClient = createPublicClient({ chain: arcTestnet, transport: http(this.arcRpcUrl) });
+        const isV2 = await arcClient.readContract({ address: this.simulationRegistryAddress, abi: SIMULATION_REGISTRY_ABI, functionName: "beneficiaryOf", args: [receiptHash] }).then(() => true, () => false);
+        const tx = isV2 ? await walletClient.writeContract({
+          address: this.simulationRegistryAddress,
+          abi: SIMULATION_REGISTRY_V2_ABI,
+          functionName: "recordSimulation",
+          args: [simulationHash, receiptHash, extractedUSDCRaw, beneficiary]
+        }) : await walletClient.writeContract({
           address: this.simulationRegistryAddress,
           abi: SIMULATION_REGISTRY_ABI,
           functionName: "recordSimulation",
           args: [simulationHash, receiptHash, extractedUSDCRaw]
         });
-        const arcClient = createPublicClient({ chain: arcTestnet, transport: http(this.arcRpcUrl) });
+        if (!isV2) this.log("WARN", "LEGACY_REGISTRY", "v1 SimulationRegistry: claims are not restricted to the victim", {});
         const mined = await arcClient.waitForTransactionReceipt({ hash: tx });
         if (mined.status !== "success") throw new Error(`recordSimulation reverted (tx ${tx})`);
         attestedOnArc = true;
         arcTxHash = tx;
         this.log("INFO", "ATTESTED", "Simulation record committed to Arc SimulationRegistry", {
           txHash: tx,
-          registry: this.simulationRegistryAddress
+          registry: this.simulationRegistryAddress,
+          beneficiary: isV2 ? beneficiary : void 0
         });
       } catch (err) {
         this.log("ERROR", "ATTEST_FAILED", "Failed to submit attestation to Arc", {

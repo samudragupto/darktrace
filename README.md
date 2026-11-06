@@ -174,12 +174,14 @@ pnpm arkiv:write-test   # needs ARKIV_PRIVATE_KEY: writes one receipt and reads 
 - **Deployed from Studio:** `SimulationRegistry` `0x52794Da1…2983` and `RebateVault` `0x676065eb…c1de`.
 - **Settlement asset:** Arc native USDC (`0x3600…0000`, 6 decimals).
 - **What the vault enforces:**
+  - **only the victim can claim (v2):** each attestation names a `beneficiary` (the wallet that signed the victim's swap), and `claimRebate` reverts with `NotBeneficiary` for anyone else, so knowing a receipt hash is not enough to take its rebate. The beneficiary chooses where the USDC goes.
   - pays only against a receipt attested in `SimulationRegistry`
   - never pays more than the attested amount
   - pays each receipt at most once (replay nullifier)
   - checks-effects-interactions with a reentrancy guard
   - blocks self-payout
 - **Live app settlement:** Studio's deployer key cannot be exported, so the live app uses a Foundry deployment of the registry and vault (funded with 5.00 USDC). Details: [`arc-studio/report.md`](arc-studio/report.md).
+- **v1 → v2 migration:** the v1 Foundry vault (`0x2ab7…28CD`) did not check who was claiming. [`DeployArcV2.s.sol`](contracts/script/DeployArcV2.s.sol) deploys the beneficiary-gated registry and vault and moves the remaining reserve across. Until v2 addresses are listed in the table above, the live app still settles on v1. The indexer detects the registry version and attests with a beneficiary on v2.
 
 ---
 
