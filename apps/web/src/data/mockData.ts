@@ -34,10 +34,22 @@ export interface MockReceipt {
 
 export const MOCK_POOLS: MockPool[] = [
   {
-    // Real pool on the deployed DarkTraceHook, created by `pnpm e2e:real` (Base Sepolia, block 55,113,082).
+    // Real Hook v2 pool on DarkTraceHook v2 (0xCeF7…c0c0), initialized on Base Sepolia (block 55,162,442).
+    id: "0x5d78af67b033875696613c57b5a68f4a62eba0d98095844b0e9c8c691afc63df",
+    name: "tUSDC / tWETH (Hook v2)",
+    feeTier: "0.30%",
+    tvl: "n/a",
+    volume24h: "n/a",
+    extracted24h: "$0.00",
+    status: "ACTIVE",
+    token0: "0x80eddda74d7127db41a3ce86a8e8d5621ec7f4df",
+    token1: "0xd501d47b246438a18c8a0bffcf10338cfbb661a2",
+  },
+  {
+    // Real pool on the deployed DarkTraceHook v1, created by `pnpm e2e:real` (Base Sepolia, block 55,113,082).
     // TVL/volume are not tracked; extraction figures on the dashboard come from Arkiv.
     id: "0x2183dce5625ecbb1cf175be52a75b31eeed7bf7774181e3136ba49f6fc3c676c",
-    name: "tUSDC / tWETH (live E2E)",
+    name: "tUSDC / tWETH (Hook v1)",
     feeTier: "0.30%",
     tvl: "n/a",
     volume24h: "n/a",

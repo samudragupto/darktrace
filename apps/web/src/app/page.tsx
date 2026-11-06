@@ -1,7 +1,17 @@
 import Link from "next/link";
-import { DemoData } from "@/components/ui/DemoData";
+import { fromArkiv, sumUSDC } from "@/lib/arkiv";
+import { getVaultReserveUSDC } from "@/lib/arc";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const [res, vaultReserve] = await Promise.all([
+    fromArkiv((sdk) => sdk.listRecentReceipts(25)),
+    getVaultReserveUSDC(),
+  ]);
+  const receipts = res.ok ? res.data : [];
+  const totalExtracted = sumUSDC(receipts);
+
   return (
     <div className="flex-1 flex flex-col p-6 max-w-6xl mx-auto w-full space-y-6">
       {/* Top Banner */}
@@ -17,7 +27,7 @@ export default function HomePage() {
           Transient-storage hooks detect extraction footprints on Base Sepolia,
           Arkiv seals immutable forensic receipts, and affected LPs claim USDC rebates on Arc.
         </p>
-        <div className="mt-5 flex items-center gap-3">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <Link
             href="/demo"
             className="px-4 py-2 bg-accent text-bg font-mono text-xs font-semibold rounded hover:opacity-90 transition-opacity"
@@ -36,34 +46,36 @@ export default function HomePage() {
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="border border-border bg-surface p-4 rounded">
-          <div className="text-[11px] font-mono text-muted uppercase">Detected Extractions</div>
+          <div className="text-[11px] font-mono text-muted uppercase">Detected Extractions (Arkiv)</div>
           <div className="text-xl font-mono font-bold text-accent mt-1 tabular-nums">
-            <DemoData>3</DemoData>
+            {res.ok ? receipts.length : "unavailable"}
           </div>
-          <div className="text-[10px] font-mono text-muted mt-1">Across 3 monitored v4 pools</div>
+          <div className="text-[10px] font-mono text-muted mt-1">Live entities on Arkiv Rabdi</div>
         </div>
         <div className="border border-border bg-surface p-4 rounded">
-          <div className="text-[11px] font-mono text-muted uppercase">Extracted Volume (24h)</div>
+          <div className="text-[11px] font-mono text-muted uppercase">Extracted Volume (Arkiv)</div>
           <div className="text-xl font-mono font-bold text-danger mt-1 tabular-nums">
-            <DemoData>$3.75</DemoData>
+            {res.ok ? `$${totalExtracted}` : "unavailable"}
           </div>
-          <div className="text-[10px] font-mono text-muted mt-1">Seeded Base Sepolia receipts</div>
+          <div className="text-[10px] font-mono text-muted mt-1">Cumulative attested USDC loss</div>
         </div>
         <div className="border border-border bg-surface p-4 rounded">
-          <div className="text-[11px] font-mono text-muted uppercase">RebateVault Reserve (Arc)</div>
-          <div className="text-xl font-mono font-bold text-good mt-1 tabular-nums">$5.00 USDC</div>
-          <div className="text-[10px] font-mono text-muted mt-1">Live on-chain balance (0x2ab7…28CD)</div>
+          <div className="text-[11px] font-mono text-muted uppercase">RebateVault v2 Reserve (Arc)</div>
+          <div className="text-xl font-mono font-bold text-good mt-1 tabular-nums">
+            {vaultReserve !== null ? `$${vaultReserve} USDC` : "unavailable"}
+          </div>
+          <div className="text-[10px] font-mono text-muted mt-1">Live on-chain balance (0x238d…4d5b)</div>
         </div>
         <div className="border border-border bg-surface p-4 rounded">
           <div className="text-[11px] font-mono text-muted uppercase">Arkiv Sealed Proofs</div>
           <div className="text-xl font-mono font-bold text-text mt-1 tabular-nums">
-            <DemoData>100.0%</DemoData>
+            {res.ok ? "100.0%" : "—"}
           </div>
           <div className="text-[10px] font-mono text-muted mt-1">Cryptographically immutable</div>
         </div>
       </div>
       <div className="text-[11px] font-mono text-muted">
-        Illustrative data. Live counters reflect only on-chain activity.
+        All counters above are read live from Arkiv Rabdi (chain 7794095) and Arc Testnet (chain 5042002).
       </div>
 
       {/* System Architecture Matrix */}

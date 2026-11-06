@@ -51,7 +51,7 @@ export function poolName(poolId: string): string {
 }
 
 export function toView(r: ArkivReceipt, claim?: ArkivLPClaim | null): ReceiptView {
-  const lifetimeBlocks = r.expiresAtBlock > r.createdAtBlock ? r.expiresAtBlock - r.createdAtBlock : 0n;
+  const lifetimeBlocks = r.expiresAtBlock > r.createdAtBlock ? r.expiresAtBlock - r.createdAtBlock : BigInt(0);
   return {
     receiptHash: r.receiptHash,
     arkivEntityKey: r.arkivEntityKey,
@@ -59,7 +59,7 @@ export function toView(r: ArkivReceipt, claim?: ArkivLPClaim | null): ReceiptVie
     owner: r.owner,
     createdAtBlock: r.createdAtBlock.toString(),
     expiresAtBlock: r.expiresAtBlock.toString(),
-    hasExtendedExpiry: lifetimeBlocks > 2_000_000n,
+    hasExtendedExpiry: lifetimeBlocks > BigInt(2_000_000),
     isSynthetic: isSyntheticReceipt(r),
     poolId: r.poolId,
     poolName: poolName(r.poolId),

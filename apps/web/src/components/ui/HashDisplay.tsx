@@ -38,8 +38,11 @@ export function HashDisplay({
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 font-mono text-xs ${className}`}>
-      <span className="text-text hover:underline cursor-pointer select-all" title={hash}>
+    <span className={`inline-flex items-center gap-1.5 font-mono text-xs max-w-full ${className}`}>
+      <span
+        className={`text-text hover:underline cursor-pointer select-all ${truncate ? "" : "break-all"}`}
+        title={hash}
+      >
         {display}
       </span>
       {showCopy && (

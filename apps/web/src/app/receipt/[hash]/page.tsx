@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HashDisplay } from "@/components/ui/HashDisplay";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { ArkivSource } from "@/components/arkiv/ArkivSource";
+import { ClaimRebatePanel } from "@/components/receipt/ClaimRebatePanel";
 import { fromArkiv, toView, writerAddress } from "@/lib/arkiv";
 import { ArrowLeft, ExternalLink, ShieldCheck, Database, SearchX } from "lucide-react";
 
@@ -255,29 +256,15 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
         )}
       </div>
 
-      {/* Settlement */}
-      <div className="border border-border bg-[#15191E] p-4 rounded flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
-        <div>
-          <div className="text-good font-bold uppercase">Settlement · Arc Testnet RebateVault</div>
-          <div className="text-muted text-[11px] mt-1 leading-relaxed">
-            {receipt.status === "REBATED"
-              ? `Rebate of $${receipt.extractedUSDC} USDC recorded on Arkiv (lp_claims), claim tx ${receipt.claimTx?.slice(0, 10)}…`
-              : `Eligible for up to $${receipt.extractedUSDC} USDC from RebateVault.sol once attested in SimulationRegistry.`}
-          </div>
-        </div>
-        {receipt.status === "REBATED" ? (
-          <div className="px-3 py-1.5 border border-good/40 bg-good/10 text-good rounded font-semibold text-[11px] inline-block">
-            CLAIMED (RECORDED ON ARKIV)
-          </div>
-        ) : (
-          <Link
-            href="/demo"
-            className="px-3 py-1.5 bg-good text-bg rounded font-semibold text-[11px] hover:opacity-90 transition-opacity inline-block"
-          >
-            Claim Rebate on Arc
-          </Link>
-        )}
-      </div>
+      {/* Settlement (Live wagmi Arc v2 Claim + Arkiv LPClaim sealer) */}
+      <ClaimRebatePanel
+        receiptHash={receipt.receiptHash}
+        extractedUSDC={receipt.extractedUSDC}
+        fallbackBeneficiary={receipt.lp || receipt.victim}
+        status={receipt.status}
+        initialClaimTx={receipt.claimTx}
+        isSynthetic={receipt.isSynthetic}
+      />
     </div>
   );
 }
