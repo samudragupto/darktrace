@@ -73,7 +73,9 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
 
   const receipt = res.data;
   const hasSlippage = receipt.injectedSlippageBps !== null && receipt.legitSlippageBps !== null;
-  const netToxicSlippage = hasSlippage ? receipt.injectedSlippageBps! - receipt.legitSlippageBps! : null;
+  // legit = slippage the victim would have had anyway (clean counterfactual);
+  // injected = extra slippage caused by the frontrun. Total realized = legit + injected.
+  const totalSlippage = hasSlippage ? receipt.injectedSlippageBps! + receipt.legitSlippageBps! : null;
   const bps = (v: number | null, sign = "") => (v === null ? "—" : `${sign}${v} bps`);
 
   return (
@@ -108,10 +110,10 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
           </div>
           {hasSlippage ? (
             <p className="text-xs font-mono text-muted leading-relaxed">
-              Victim suffered <span className="text-danger font-semibold">+{receipt.injectedSlippageBps} bps</span> of
-              realized slippage. The CPMM counterfactual puts clean market slippage at{" "}
-              <span className="text-good font-semibold">{receipt.legitSlippageBps} bps</span>. The remaining{" "}
-              <span className="text-accent font-semibold">{netToxicSlippage} bps</span> is attributed to the
+              Victim realized <span className="text-danger font-semibold">{totalSlippage} bps</span> of slippage. The
+              CPMM counterfactual shows <span className="text-good font-semibold">{receipt.legitSlippageBps} bps</span>{" "}
+              would have occurred without the attack; the extra{" "}
+              <span className="text-accent font-semibold">+{receipt.injectedSlippageBps} bps</span> was injected by the
               searcher&apos;s frontrun.
             </p>
           ) : (
