@@ -98,7 +98,7 @@ Judges should be able to tell at a glance what runs for real.
 | Component | Status |
 | :--- | :--- |
 | `DarkTraceHook`, `SearcherRegistry` on Base Sepolia | **Deployed** |
-| `SimulationRegistry`, `RebateVault` on Arc Testnet | **Deployed.** v1 was funded with 5.00 USDC and **paid out a real 3.57 USDC rebate** in Verified Run #1; the remaining **1.43 USDC** reserve was migrated to beneficiary-gated v2 (see below) |
+| `SimulationRegistry`, `RebateVault` on Arc Testnet | **Deployed.** v1 paid out **3.57 USDC** in Verified Run #1; beneficiary-gated v2 (`0xd501…61a2` / `0x238d…4d5b`) was topped up to **5.00 USDC**, blocked an unauthorized operator claim (`NotBeneficiary`), and **paid out 3.54 USDC to the separate Victim EOA** in Verified Run #2 (`1.460023 USDC` reserve remaining) |
 | Indexer watching the hook | **Live** (`/api/indexer/health` reports the hook address and `arkivWriter`) |
 | Arkiv receipts & claims | **Live.** Written with the SDK, read by `/dashboard`, `/receipt`, `/pool`, `/searcher`, `/lp`, `/api/stats` |
 | Arc vault USDC reserve | **Live** on-chain `balanceOf` read in `/api/stats` and on `/dashboard` |
@@ -114,8 +114,8 @@ Judges should be able to tell at a glance what runs for real.
 | **Base Sepolia** | Uniswap v4 `PoolManager` | `0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408` | Canonical v4 Pool Manager |
 | **Base Sepolia** | `DarkTraceHook` | `0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0` | Hook with `0x00C0` (`beforeSwap` / `afterSwap`) permission flags |
 | **Base Sepolia** | `SearcherRegistry` | `0x24A2669C706CCE71BAea24a4De18D9D215713551` | Searcher bond escrow and owner-governed slashing |
-| **Arc Testnet** | `SimulationRegistry` v2 (Foundry) | `0xd501D47b246438A18C8a0BFFCF10338CfBB661a2` | Active attestation registry (beneficiary-gated) |
-| **Arc Testnet** | `RebateVault` v2 (Foundry) | `0x238dE56E52A3F6C6708952052e6a20E5102b4d5b` | Active settlement vault (`1.428417 USDC` reserve migrated from v1) |
+| **Arc Testnet** | `SimulationRegistry` v2 (Foundry) | `0xd501D47b246438A18C8a0BFFCF10338CfBB661a2` | Active attestation registry (beneficiary-gated; used by Verified Run #2) |
+| **Arc Testnet** | `RebateVault` v2 (Foundry) | `0x238dE56E52A3F6C6708952052e6a20E5102b4d5b` | Active settlement vault (paid `3.539977 USDC` to Victim EOA in Verified Run #2; `1.460023 USDC` reserve remaining) |
 | **Arc Testnet** | `SimulationRegistry` v1 (Foundry, retired) | `0xb8416cb4d82BA72b70C3EC55d7AC66b5DB415CF8` | Retired (used by verified run #1; attestation `0x50ab85ca…d9eec9`) |
 | **Arc Testnet** | `RebateVault` v1 (Foundry, retired) | `0x2ab745F51002Ce236A9A2dA81cDaA553B87f28CD` | Retired (used by verified run #1; paid `3.571583 USDC` in `0x4202622d…a4963f`, remaining `1.428417 USDC` migrated to v2) |
 | **Arc Testnet** | `SimulationRegistry` (Arc Studio) | `0x52794Da13E573c9e73D32248a286843418Ba2983` | Generated, tested and deployed in Arc Studio (v1 schema) |
@@ -123,8 +123,10 @@ Judges should be able to tell at a glance what runs for real.
 | **Arc Testnet** | Arc native USDC (ERC-20) | `0x3600000000000000000000000000000000000000` | Native 6-decimal USDC interface |
 | **Arkiv (Rabdi, 7794095)** | Namespace | `darktrace.v1` | `ExtractionReceipt` / `SearcherProfile` / `LPClaim` |
 | **Arkiv (Rabdi, 7794095)** | Writer wallet | `0xb491fe5846DE735B6Cb03a677A3C6296FAB0aDA5` | Only entities owned by this wallet are trusted on read |
-| **Arkiv (Rabdi, 7794095)** | Verified run #1 receipt entity | `0x837ad00cd5fba8b67ba3976cbbca64de32d4ddac8483bb6b56b6866f67b432a8` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x837ad00cd5fba8b67ba3976cbbca64de32d4ddac8483bb6b56b6866f67b432a8) |
-| **Arkiv (Rabdi, 7794095)** | Verified run #1 claim entity | `0x20d3a7149d2912642cc7dedf994454a48dc6c1f480bb81bf007de5c788985fd5` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x20d3a7149d2912642cc7dedf994454a48dc6c1f480bb81bf007de5c788985fd5) |
+| **Arkiv (Rabdi, 7794095)** | Verified run #2 receipt entity (v2) | `0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27) |
+| **Arkiv (Rabdi, 7794095)** | Verified run #2 claim entity (v2) | `0x45dcfc2de3a9b1e6738ef67dcfa323c202f28683da820c35cf0f27d3b6d89a35` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x45dcfc2de3a9b1e6738ef67dcfa323c202f28683da820c35cf0f27d3b6d89a35) |
+| **Arkiv (Rabdi, 7794095)** | Verified run #1 receipt entity (v1) | `0x837ad00cd5fba8b67ba3976cbbca64de32d4ddac8483bb6b56b6866f67b432a8` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x837ad00cd5fba8b67ba3976cbbca64de32d4ddac8483bb6b56b6866f67b432a8) |
+| **Arkiv (Rabdi, 7794095)** | Verified run #1 claim entity (v1) | `0x20d3a7149d2912642cc7dedf994454a48dc6c1f480bb81bf007de5c788985fd5` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x20d3a7149d2912642cc7dedf994454a48dc6c1f480bb81bf007de5c788985fd5) |
 | **Arkiv (Rabdi, 7794095)** | Sample entity key | `0xc327d5db4aa3098b80dc8729d090317408f98d19e1e19c13d6cf83494a05f8ca` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0xc327d5db4aa3098b80dc8729d090317408f98d19e1e19c13d6cf83494a05f8ca) |
 
 ---
@@ -240,13 +242,28 @@ Visit [`/demo`](https://darktrace-lovat.vercel.app/demo) for a guided forensic w
 PRIVATE_KEY=0x… pnpm e2e:real    # the DarkTrace writer wallet (0xb491…aDA5)
 ```
 
-1. **Base Sepolia:** [`E2ESandwich.s.sol`](contracts/script/E2ESandwich.s.sol) creates a tUSDC/tWETH pool on the deployed `DarkTraceHook` and executes frontrun → victim → backrun.
-   - The searcher and the victim use different router contracts, because in v4 the hook's `sender` is the router.
-   - All three swaps land in one transaction, which guarantees the same block and the right order.
-2. **Hook:** emits `ExtractionDetected` naming the searcher and victim routers.
-3. **Indexer:** [`onchain.ts`](apps/indexer/src/onchain.ts) rebuilds the three swaps and the pre-attack price from the PoolManager's `Swap` events alone, then runs the CPMM counterfactual.
-4. **Arkiv + Arc:** seals the `ExtractionReceipt` on Arkiv and attests it in `SimulationRegistry`.
-5. **Rebate:** [`claim.ts`](apps/indexer/src/claim.ts) claims the attested USDC from `RebateVault`.
+1. **Arc v2 vault top-up & separate identities:** [`e2e-sandwich.ts`](apps/indexer/src/e2e-sandwich.ts) ensures `RebateVault` v2 holds `5.00 USDC` and prepares two distinct funded accounts: the searcher/operator (`0xb491…aDA5`) and a separate Victim EOA (`0x524e…51Db`, `beneficiary ≠ operator`).
+2. **Base Sepolia (3 separate transactions in one block):** broadcasts `tx1` (operator frontrun via `searcherRouter`), `tx2` (Victim EOA swap via `victimRouter`), and `tx3` (operator backrun via `searcherRouter`) ordered by priority fee in a single block.
+3. **Hook:** `tx3` emits `ExtractionDetected` naming the searcher and victim routers.
+4. **Indexer:** [`onchain.ts`](apps/indexer/src/onchain.ts) rebuilds the three swaps from `PoolManager` `Swap` events, resolves `victimOrigin = getTransaction(tx2).from` (`0x524e…51Db`), and runs the CPMM counterfactual.
+5. **Arkiv + Arc v2:** seals the `ExtractionReceipt` on Arkiv and attests it in `SimulationRegistry` v2 with `beneficiary = 0x524e…51Db`.
+6. **Beneficiary-gated rebate:** [`claim.ts`](apps/indexer/src/claim.ts) first proves that the operator (`0xb491…aDA5`) reverts with `NotBeneficiary` when attempting `claimRebate`, then signs `claimRebate` with the Victim EOA (`0x524e…51Db`) and seals the `LPClaim` on Arkiv.
+
+### Verified run #2 (v2 — separate searcher & victim EOAs, settled on Arc v2)
+
+| Step | Network | Evidence |
+| :--- | :--- | :--- |
+| Vault top-up: `RebateVault` v2 (`0x238d…4d5b`) topped up by `3.571583 USDC` (`1.43 → 5.00 USDC`) | Arc Testnet | [`0x001aa60f…5563de`](https://explorer.testnet.arc.io/tx/0x001aa60f8d4338aa66c25ff981d6c960b17e6f11bcaa9dcc2b61693ad55563de) |
+| Frontrun (`tx1`, idx 2): Operator `0xb491…aDA5` swaps `200 tUSDC → tWETH` via `searcherRouter` | Base Sepolia, block 55,152,258 | [`0xa9a12ef2…8ba48c`](https://sepolia.basescan.org/tx/0xa9a12ef232d1df4a38a56cf10ef5566f71a36798b4b4109eebf89a05658ba48c) ([Blockscout](https://base-sepolia.blockscout.com/tx/0xa9a12ef232d1df4a38a56cf10ef5566f71a36798b4b4109eebf89a05658ba48c)) |
+| Victim swap (`tx2`, idx 3): **Victim EOA `0x524e…51Db`** swaps `1,000 tUSDC → tWETH` via `victimRouter` | Base Sepolia, block 55,152,258 | [`0x23984ec7…a772c4`](https://sepolia.basescan.org/tx/0x23984ec70d7fc514697be40d8bb7500941ecbed350181a75b7fcb79e7ea772c4) ([Blockscout](https://base-sepolia.blockscout.com/tx/0x23984ec70d7fc514697be40d8bb7500941ecbed350181a75b7fcb79e7ea772c4)) |
+| Backrun (`tx3`, idx 4): Operator `0xb491…aDA5` swaps `0.06518 tWETH → tUSDC`; `DarkTraceHook` emits `ExtractionDetected` (`proofHash 0x63c9…97d7`) | Base Sepolia, block 55,152,258 | [`0x6dd63c93…84f5d9`](https://sepolia.basescan.org/tx/0x6dd63c93a3945d7f737b64350f480cbafc3a5032b0442b3dbef4c6d72f84f5d9) ([Blockscout](https://base-sepolia.blockscout.com/tx/0x6dd63c93a3945d7f737b64350f480cbafc3a5032b0442b3dbef4c6d72f84f5d9)) |
+| `ExtractionReceipt` sealed: **3.54 USDC** loss, 35 bps injected / 90 bps legit, 3 distinct `txHashes`, `lp = 0x524e…51Db` | Arkiv Rabdi | [`$key 0x2286e8a0…5d27`](https://rabdi.explorer.arkiv.network/entity/0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27) · [receipt view](https://darktrace-lovat.vercel.app/receipt/0xe191f885168d1d06b6c7d27ef00504d58f7661c7da5adc8c3a79aaf8bb72959a) |
+| `SimulationRegistry` v2 (`0xd501…61a2`) `recordSimulation`: `3,539,977` raw USDC attested to `beneficiary = 0x524e061C89036b12a4f377bD8999038Da3A551Db` | Arc Testnet | [`0xf4e1fa19…744ca4`](https://explorer.testnet.arc.io/tx/0xf4e1fa19d88a7151ba7c2d43a525daafecffca1e29d290a7eb4059d521744ca4) |
+| `RebateVault` v2 (`0x238d…4d5b`) `NotBeneficiary` guard: Operator `0xb491…aDA5` claim attempt **reverts `NotBeneficiary` on-chain** | Arc Testnet | [`0xef11bca9…dca8eb`](https://explorer.testnet.arc.io/tx/0xef11bca9a7f4b64983a2404834cdf1c817c1aeda334a73f0958cfa3aeddca8eb) |
+| `RebateVault` v2 (`0x238d…4d5b`) `claimRebate`: **Victim EOA `0x524e…51Db` claims 3.539977 USDC**, reserve `5.00 → 1.460023 USDC` | Arc Testnet | [`0xb72bd280…f1fd00`](https://explorer.testnet.arc.io/tx/0xb72bd280acafa1f1cec3f6738066070e1bc0940408348ed530fb54b39df1fd00) |
+| `LPClaim` sealed: links receipt `0xe191…959a` (`lp 0x524e…51Db`) to Arc claim tx `0xb72b…fd00` (status `REBATED`) | Arkiv Rabdi | [`$key 0x45dcfc2d…9a35`](https://rabdi.explorer.arkiv.network/entity/0x45dcfc2de3a9b1e6738ef67dcfa323c202f28683da820c35cf0f27d3b6d89a35) |
+
+Both the searcher EOA (`0xb491…aDA5`) and the victim EOA (`0x524e…51Db`) are scripted by [`e2e-sandwich.ts`](apps/indexer/src/e2e-sandwich.ts) for repeatable testnet verification, but they sign separate transactions from separate wallets so `beneficiary ≠ operator` is enforced end-to-end on-chain.
 
 ### Verified run #1 (Nov 6, 2026 — settled on Arc v1)
 

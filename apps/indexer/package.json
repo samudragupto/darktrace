@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "test": "tsx --test src/pipeline.test.ts src/onchain.test.ts",
     "process-tx": "tsx src/process-tx.ts",
-    "claim": "tsx src/claim.ts"
+    "claim": "tsx src/claim.ts",
+    "e2e-sandwich": "tsx src/e2e-sandwich.ts"
   },
   "dependencies": {
     "@darktrace/arkiv": "workspace:*",

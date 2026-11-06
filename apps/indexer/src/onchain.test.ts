@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { encodeAbiParameters, encodeEventTopics, parseAbi, parseAbiParameters, type Hex, type PublicClient } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { runCounterfactualSimulation } from "@darktrace/simulator";
-import { sqrtPriceBefore, type OnchainSwap } from "./onchain";
+import { reconstructSandwich, sqrtPriceBefore, type OnchainSwap } from "./onchain";
+import { deriveVictimPrivateKey } from "./e2e-sandwich";
 
 // Swap events captured from a real E2ESandwich bundle executed against the deployed
 // DarkTraceHook + PoolManager on a Base Sepolia fork (pool started at tick 196260).
@@ -53,4 +56,63 @@ test("counterfactual on the real bundle yields a positive loss below the victim'
   assert.ok(sim.extractedUSDCRaw > 0n);
   assert.ok(sim.extractedUSDCRaw < 1_000_000_000n); // < the 1,000 tUSDC the victim swapped
   assert.equal(sim.extractedUSDC, "3.57");
+});
+
+test("reconstructSandwich attributes beneficiary to Victim EOA across 3 separate transactions", async () => {
+  const operatorKey = "0x1111111111111111111111111111111111111111111111111111111111111111" as const;
+  const victimKey = deriveVictimPrivateKey(operatorKey);
+  const operatorEOA = privateKeyToAccount(operatorKey).address;
+  const victimEOA = privateKeyToAccount(victimKey).address;
+  assert.notEqual(operatorEOA.toLowerCase(), victimEOA.toLowerCase());
+
+  const poolId = "0x2183dce5625ecbb1cf175be52a75b31eeed7bf7774181e3136ba49f6fc3c676c" as const;
+  const searcherRouter = "0xc31545299093C46d87752cD6378A811BFDD9940D" as const;
+  const victimRouter = "0x942823FD44c68d77Ad631f0aa4DEA35143E52488" as const;
+  const tx1 = "0xaaa1111111111111111111111111111111111111111111111111111111111111" as const;
+  const tx2 = "0xbbb2222222222222222222222222222222222222222222222222222222222222" as const;
+  const tx3 = "0xccc3333333333333333333333333333333333333333333333333333333333333" as const;
+
+  const swapAbi = parseAbi([
+    "event Swap(bytes32 indexed id, address indexed sender, int128 amount0, int128 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick, uint24 fee)",
+  ]);
+  const makeLog = (
+    sender: Hex,
+    amount0: bigint,
+    amount1: bigint,
+    sqrtPriceX96: bigint,
+    tick: number,
+    txHash: Hex,
+    logIndex: number
+  ) => ({
+    topics: encodeEventTopics({ abi: swapAbi, eventName: "Swap", args: { id: poolId, sender } }),
+    data: encodeAbiParameters(
+      parseAbiParameters("int128 amount0, int128 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick, uint24 fee"),
+      [amount0, amount1, sqrtPriceX96, L, tick, 3000]
+    ),
+    transactionHash: txHash,
+    logIndex,
+  });
+
+  const mockClient = {
+    getLogs: async () => [
+      makeLog(searcherRouter, -200_000_000n, 66_000_000_000_000_000n, frontrun.sqrtPriceX96After, 196223, tx1, 1),
+      makeLog(victimRouter, -1_000_000_000n, 328_000_000_000_000_000n, victim.sqrtPriceX96After, 196042, tx2, 2),
+      makeLog(searcherRouter, 202_428_787n, -66_000_000_000_000_000n, 1433700000000000000000000000000000n, 196079, tx3, 3),
+    ],
+    getTransaction: async ({ hash }: { hash: Hex }) => ({
+      from: hash === tx2 ? victimEOA : operatorEOA,
+    }),
+  } as unknown as PublicClient;
+
+  const reconstructed = await reconstructSandwich(mockClient, {
+    poolId,
+    blockNumber: 55150000n,
+    searcher: searcherRouter,
+    victim: victimRouter,
+    detectedLogIndex: 4,
+  });
+
+  assert.equal(reconstructed.victimOrigin.toLowerCase(), victimEOA.toLowerCase());
+  assert.notEqual(reconstructed.victimOrigin.toLowerCase(), operatorEOA.toLowerCase());
+  assert.deepEqual(reconstructed.txHashes, [tx1, tx2, tx3]);
 });
