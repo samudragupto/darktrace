@@ -2,7 +2,6 @@ import Link from "next/link";
 import { MOCK_POOLS } from "@/data/mockData";
 import { HashDisplay } from "@/components/ui/HashDisplay";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { DemoData } from "@/components/ui/DemoData";
 import { ArkivSource } from "@/components/arkiv/ArkivSource";
 import { ReceiptsTable } from "@/components/arkiv/ReceiptsTable";
 import { fromArkiv, sumUSDC, toViewsWithClaims, writerAddress } from "@/lib/arkiv";
@@ -17,17 +16,16 @@ interface PoolPageProps {
 }
 
 export default async function PoolPage({ params }: PoolPageProps) {
-  const pool = MOCK_POOLS.find((p) => p.id.toLowerCase() === params.id.toLowerCase()) || {
+  const known = MOCK_POOLS.find((p) => p.id.toLowerCase() === params.id.toLowerCase());
+  const pool = known ?? {
     id: params.id,
-    name: "Custom Uniswap v4 Pool",
-    feeTier: "0.05%",
-    tvl: "$500.00",
-    volume24h: "$120.00",
-    extracted24h: "$0.00",
-    status: "CLEAN" as const,
-    token0: "0x4200000000000000000000000000000000000006",
-    token1: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    name: "Unregistered pool",
+    feeTier: "—",
+    hook: undefined,
+    hookAddress: undefined,
+    initTx: undefined,
   };
+
 
   const res = await fromArkiv(async (sdk) => toViewsWithClaims(sdk, await sdk.listReceiptsByPool(params.id)));
   const poolReceipts = res.ok ? res.data : [];
@@ -71,16 +69,27 @@ export default async function PoolPage({ params }: PoolPageProps) {
             <div className="text-text font-bold mt-1">{pool.feeTier}</div>
           </div>
           <div className="p-3 border border-border rounded bg-bg">
-            <div className="text-muted text-[11px]">Pool TVL</div>
-            <div className="text-text font-bold mt-1 tabular-nums">
-              <DemoData>{pool.tvl}</DemoData>
+            <div className="text-muted text-[11px]">Hook</div>
+            <div className="text-text font-bold mt-1 break-all">
+              {pool.hookAddress ? (
+                <a
+                  href={`https://sepolia.basescan.org/address/${pool.hookAddress}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:underline"
+                >
+                  DarkTraceHook {pool.hook}
+                </a>
+              ) : pool.hook === "fixture" ? (
+                <span className="text-muted">SDK test fixture</span>
+              ) : (
+                <span className="text-muted">not a DarkTrace pool</span>
+              )}
             </div>
           </div>
           <div className="p-3 border border-border rounded bg-bg">
-            <div className="text-muted text-[11px]">24h Volume</div>
-            <div className="text-muted font-bold mt-1 tabular-nums">
-              <DemoData>{pool.volume24h}</DemoData>
-            </div>
+            <div className="text-muted text-[11px]">Receipts (Arkiv)</div>
+            <div className="text-text font-bold mt-1 tabular-nums">{poolReceipts.length}</div>
           </div>
           <div className="p-3 border border-border rounded bg-bg">
             <div className="text-muted text-[11px]">Extracted (Arkiv)</div>

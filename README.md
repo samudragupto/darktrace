@@ -103,7 +103,52 @@ Judges should be able to tell at a glance what runs for real.
 | Arkiv receipts, claims & searcher profiles | **Live.** Written with the SDK (`30d` standard TTL, extended to `90d` for open claims), read by `/dashboard`, `/receipt`, `/pool`, `/searcher`, `/lp`, `/api/stats` (`ON-CHAIN` vs `SYNTHETIC [DEMO]` labeled in UI) |
 | Arc vault USDC reserve & interactive claim | **Live.** On-chain `balanceOf` read in `/api/stats` and `/dashboard`; `/receipt/[hash]` includes a live wagmi **Claim Rebate** panel that checks `beneficiary` on Arc v2, calls `claimRebate`, and seals `LPClaim` on Arkiv |
 | `/demo` walkthrough | **Dual-mode:** **(1) Replay Verified On-Chain Runs** (driven by real Base Sepolia, Arkiv, and Arc tx/entity data for Verified Run #2, Hook v2 Run, and Verified Run #1) and **(2) Browser Simulation Sandbox `[DEMO]`** |
-| Pool TVL / 24h volume on the dashboard | **Illustrative**, marked `[DEMO]` in the UI |
+| Off-chain linked-origin scanner | **Live in the indexer** (watches both hooked pools; `/api/indexer/health` → `linkedScanner`). Fork-proven with [`scripts/fork-proof-v2.sh`](scripts/fork-proof-v2.sh); no real split-contract sandwich has occurred on testnet yet |
+| Escrow + expiry vault (`0x0897…E104`) | **Deployed and tested, not live:** holds 0 USDC and the app settles on v2 (`0x238d…4d5b`), which has no dispute window |
+| Searcher bonds | **Live read** of `SearcherRegistry` (native ETH). No bond has been posted, so the UI shows `0.0000 ETH` |
+
+---
+
+## Detection Coverage
+
+| Sandwich shape | Caught by | Evidence |
+| :--- | :--- | :--- |
+| Frontrun + backrun from the same contract, one bundle tx | Hook v1 and v2 (`ExtractionDetected`) | Verified run #1 (v1); hook v2 run `0xef69…51c8` |
+| Same contract, **three separate txs** in one block | Hook v1 and v2 (block-scoped storage) | Verified run #2 on v1 (block 55,152,258); fork proof scenario A on **v2** |
+| Frontrun and backrun from **different contracts**, same signing EOA (split-contract evasion) | **Off-chain linked-origin scanner** in the indexer (the hook v2 deliberately misses this; see [threat model §3](specs/08-hook-threat-model.md)) | Fork proof scenario B: hook silent, scanner finds it, receipt computed with `detection=linked-origin` |
+| Frontrun and backrun from different EOAs and contracts | **Not caught** (indistinguishable from two independent traders without off-chain identity data) | Documented limitation |
+
+Reproduce both fork scenarios against the real deployed hook v2 and pool, with no keys and nothing broadcast:
+
+```bash
+./scripts/fork-proof-v2.sh
+```
+
+---
+
+## Prior Art & What's Different
+
+| Project | Approach | Pays the victim? |
+| :--- | :--- | :--- |
+| [MEV Blocker](https://docs.mevblocker.io/) / [Flashbots Protect](https://docs.flashbots.net/flashbots-protect/mev-share) | Private RPC prevents sandwiches; shares backrun rebates | Small backrun rebates; no per-sandwich restitution |
+| [Angstrom](https://mirror.xyz/0x1b6Fc245e8e067060b982094E9a8bbaF1D199497/rvV1Ln7_NtWl3hEmZzWORFHVvg7qCYgdFk1lnFPZ6rE) (Sorella) | v4 hook, uniform per-block price removes sandwiches in its pools | Prevention, not restitution |
+| [EigenPhi](https://eigenphi-1.gitbook.io/arbitrage-scan-user-guide/sandwich) | Sandwich analytics and victim leaderboards | No |
+| [MEVictim Rebate](https://ethglobal.com/showcase/mevictim-rebate-qsxak) (ETHGlobal NY 2023 finalist) | Subgraph + Axiom ZK proof of victimhood, soulbound NFT | No (rebates were not built) |
+| [meva](https://ethglobal.com/showcase/meva-54k1t) (HackMoney 2026) | Hook taxes scored bots; 30% to victims | Designed, from bot tax |
+| **DarkTrace** | Hook + off-chain linked-origin detection, loss rebuilt from PoolManager events, Arkiv receipt, beneficiary-gated USDC | **Yes, twice on testnet** (3.57 and 3.54 USDC); the second to the victim's own wallet, after the operator's claim reverted on-chain |
+
+DarkTrace is restitution, not prevention: it complements private RPCs and prevention hooks for pools that want a verifiable "victims get repaid" guarantee.
+
+---
+
+## Trust Model & Known Limitations
+
+- **Single attester.** `SimulationRegistry` attestations come from one owner key (`0xb491…aDA5`), which also owns the vault and can `emergencyWithdraw`. Anyone can recompute the loss from the Arkiv receipt and the Base txs, but nothing on-chain enforces it yet. The escrow vault's dispute window is the next step, and ZK or optimistic proofs the long-term one.
+- **Funding.** The vault is funded by the operator on testnet. Slashing `SearcherRegistry` bonds or taking a hook-fee share into the vault is designed, not built.
+- **Scripted attacks.** Both verified runs were executed by us on testnet. In run #2 the victim wallet is a separate EOA, but its key is derived from the operator key (`deriveVictimPrivateKey`), so both sides are still ours.
+- **Counterfactual scope.** Exact within one liquidity range; swaps that cross initialized ticks are not modelled yet.
+- **Detection gaps.** See the last row of Detection Coverage. Hook state holds one candidate per pool per block.
+- **Arc Studio.** The Studio deployment (`0x5279…` / `0x6760…`) is the v1 schema, holds no funds, and is not used by the app (its deployer key cannot be exported).
 
 ---
 

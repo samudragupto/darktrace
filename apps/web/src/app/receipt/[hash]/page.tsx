@@ -218,6 +218,15 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span className="text-muted">Detected by:</span>
+            <span className="text-text">
+              {receipt.detection === "linked-origin"
+                ? "Off-chain linked-origin scan (frontrun & backrun via different contracts, same signing EOA)"
+                : "On-chain DarkTraceHook (ExtractionDetected)"}
+            </span>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <span className="text-muted">Simulation Hash (CPMM counterfactual):</span>
             <HashDisplay hash={receipt.simulationHash} truncate={false} />
           </div>

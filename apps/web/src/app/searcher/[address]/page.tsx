@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { HashDisplay } from "@/components/ui/HashDisplay";
-import { DemoData } from "@/components/ui/DemoData";
+import { getSearcherBond, SEARCHER_REGISTRY } from "@/lib/base";
 import { ArkivSource } from "@/components/arkiv/ArkivSource";
 import { ReceiptsTable } from "@/components/arkiv/ReceiptsTable";
 import { fromArkiv, sumUSDC, toViewsWithClaims, writerAddress } from "@/lib/arkiv";
@@ -30,6 +30,7 @@ export default async function SearcherPage({ params }: SearcherPageProps) {
   const profile = res.ok ? res.data.profile : null;
   const searcherReceipts = res.ok ? res.data.receipts : [];
   const totalExtracted = sumUSDC(searcherReceipts);
+  const bond = valid ? await getSearcherBond(params.address) : null;
   const extractionsCount = profile ? profile.extractions : searcherReceipts.length;
   const lastSeenBlock = profile
     ? profile.lastSeenBlock
@@ -123,13 +124,24 @@ export default async function SearcherPage({ params }: SearcherPageProps) {
           <div className="p-3 border border-border rounded bg-bg">
             <div className="text-muted text-[11px]">Collateral Bond (Base Sepolia)</div>
             <div className="text-good font-bold mt-1 tabular-nums">
-              <DemoData>$25.00 USDC</DemoData>
+              {bond === null ? <span className="text-muted">unavailable</span> : `${bond.bondEth} ETH`}
+            </div>
+            <div className="text-[10px] text-muted mt-1">
+              {bond && bond.bondEth === "0.0000" ? "No bond posted. " : ""}Live read of{" "}
+              <a
+                href={`https://sepolia.basescan.org/address/${SEARCHER_REGISTRY}`}
+                target="_blank"
+                rel="noreferrer"
+                className="underline hover:text-text"
+              >
+                SearcherRegistry
+              </a>
             </div>
           </div>
           <div className="p-3 border border-border rounded bg-bg">
-            <div className="text-muted text-[11px]">bond reduced (Base Sepolia, forensic only)</div>
+            <div className="text-muted text-[11px]">Bond slashed (Base Sepolia)</div>
             <div className="text-danger font-bold mt-1 tabular-nums">
-              <DemoData>$2.10 USDC</DemoData>
+              {bond === null ? <span className="text-muted">unavailable</span> : `${bond.slashedEth} ETH`}
             </div>
             <div className="text-[10px] text-muted mt-1">
               Local Base Sepolia attestation; does not settle or fund Arc vault

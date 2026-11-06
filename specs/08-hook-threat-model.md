@@ -22,6 +22,8 @@
 
 1. **Sybil searcher contracts (`Searcher Contract A` frontruns, `Searcher Contract B` backruns):**
    - Because Hook v2 enforces `actor == s.frontrunSender` to eliminate independent-arbitrageur false positives, a sophisticated searcher splitting its frontrun and backrun across two distinct router contracts (`A != B`) will evade single-hook matching unless both contracts pass the same attributed searcher identity in `hookData`.
+   - **Mitigation (off-chain, shipped):** the indexer's linked-origin scanner (`apps/indexer/src/linked-scanner.ts`, `findLinkedSandwiches` in `onchain.ts`) links the two legs by the EOA that signed them, with the hook's own thresholds plus a profit check. `scripts/fork-proof-v2.sh` reproduces the evasion against the deployed hook v2 (hook silent) and the scanner catching it (`detection=linked-origin`). Still not caught: different EOAs *and* different contracts.
+   - **`hookData` attribution is caller-supplied** and therefore spoofable. It only refines who the hook names as victim; restitution goes to the signer of the victim tx (read by the indexer), never to a `hookData` address.
 2. **Split / salami frontruns (multiple micro-swaps each below `minTickDeltaThreshold`):**
    - A searcher splitting a frontrun into many small swaps that each move the tick by `< minTickDeltaThreshold` (`15` ticks) will not arm `frontrunTickDelta`, though doing so incurs repeated base transaction / callback overhead.
 3. **Cross-pool / multi-hop sandwiches:**

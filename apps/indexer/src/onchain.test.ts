@@ -16,6 +16,8 @@ const swap = (o: Partial<OnchainSwap> & Pick<OnchainSwap, "zeroForOne" | "amount
   fee: 3000,
   txHash: "0x00",
   logIndex: 0,
+  amount0: 0n,
+  amount1: 0n,
   amountInNet: (o.amountInGross * 997_000n) / 1_000_000n,
   ...o,
 });

@@ -9,7 +9,10 @@ services:
       - PORT=8080
       - NODE_ENV=development
       - BASE_SEPOLIA_RPC=https://sepolia.base.org
-      - HOOK_ADDRESS=0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0
+      # Both verified hooks (comma-separated) and their pools; LINKED_SCAN=0 disables the off-chain scanner
+      - HOOK_ADDRESS=0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0,0xCeF7a999885D93f23Beeb7D319A83F2949B2c0c0
+      - WATCH_POOLS=0x2183dce5625ecbb1cf175be52a75b31eeed7bf7774181e3136ba49f6fc3c676c,0x5d78af67b033875696613c57b5a68f4a62eba0d98095844b0e9c8c691afc63df
+      - LINKED_SCAN=1
       - ARC_RPC_URL=https://rpc.testnet.arc.network
       - SIMULATION_REGISTRY_ADDRESS=0xd501D47b246438A18C8a0BFFCF10338CfBB661a2
       - ARKIV_RPC_URL=https://rpc.rabdi.db-chain.testnet.arkiv.network
