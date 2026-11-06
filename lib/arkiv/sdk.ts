@@ -46,6 +46,7 @@ export const ReceiptsSchema = defineSchema("receipts", {
   injectedSlippageBps: u64().optional(),
   legitSlippageBps: u64().optional(),
   createdAtMs: u64().optional(),
+  detection: str().optional(), // "hook" | "linked-origin"; absent on entities written before it existed
 });
 
 export const SearcherProfilesSchema = defineSchema("darktrace.searcher_profiles", {
@@ -86,6 +87,8 @@ export interface ArkivReceipt extends ArkivEntityMeta {
   injectedSlippageBps: number | null;
   legitSlippageBps: number | null;
   createdAtMs: number | null;
+  /** "hook" | "linked-origin"; null for receipts written before detection was recorded (all hook-detected). */
+  detection: string | null;
 }
 
 export interface ArkivSearcherProfile extends ArkivEntityMeta, Omit<SearcherProfile, "v"> {}
@@ -144,6 +147,7 @@ function toReceipt(row: any): ArkivReceipt {
     injectedSlippageBps: num(row.injectedSlippageBps),
     legitSlippageBps: num(row.legitSlippageBps),
     createdAtMs: num(row.createdAtMs),
+    detection: v<string>(row.detection) ?? null,
   };
 }
 
@@ -224,6 +228,7 @@ export class ArkivSdk {
         injectedSlippageBps: u64(BigInt(receipt.injectedSlippageBps)),
         legitSlippageBps: u64(BigInt(receipt.legitSlippageBps)),
         createdAtMs: u64(BigInt(receipt.createdAt)),
+        ...(receipt.detection ? { detection: receipt.detection } : {}),
       },
       { expiration: ExpirationTime.fromDays(RECEIPT_TTL_DAYS) }
     );

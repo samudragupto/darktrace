@@ -14,6 +14,12 @@ export interface ExtractionReceipt {
   simulationHash: string;
   txHashes: string[];
   createdAt: number;
+  /**
+   * How the sandwich was found: "hook" (DarkTraceHook ExtractionDetected) or "linked-origin"
+   * (off-chain: frontrun and backrun from different contracts signed by the same EOA).
+   * Optional and NOT part of computeReceiptHash, so existing receipt hashes are unchanged.
+   */
+  detection?: "hook" | "linked-origin";
 }
 
 export interface SearcherProfile {

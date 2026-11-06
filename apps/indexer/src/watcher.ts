@@ -7,7 +7,8 @@ const EXTRACTION_DETECTED_EVENT = parseAbiItem(
 );
 
 export interface WatcherConfig {
-  hookAddress: `0x${string}`;
+  /** One or more DarkTraceHook deployments (v1 and v2 are both live on Base Sepolia). */
+  hookAddress: `0x${string}` | `0x${string}`[];
   rpcUrl?: string;
   pipeline: ForensicPipeline;
 }
@@ -24,7 +25,7 @@ export function startHookWatcher(config: WatcherConfig) {
       level: "INFO",
       stage: "INIT",
       message: "DarkTrace Base Sepolia Hook Watcher started",
-      hookAddress: config.hookAddress,
+      hookAddresses: ([] as string[]).concat(config.hookAddress),
     })
   );
 

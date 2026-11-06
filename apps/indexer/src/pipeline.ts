@@ -25,6 +25,11 @@ export interface ExtractionEventPayload {
   txHash?: `0x${string}`;
   /** Log index of ExtractionDetected inside the block (bounds the swap search). */
   logIndex?: number;
+  /**
+   * "hook" (default): from DarkTraceHook's ExtractionDetected; `searcher` is the router contract.
+   * "linked-origin": from the off-chain scanner; `searcher` is the EOA that signed both legs.
+   */
+  detection?: "hook" | "linked-origin";
 }
 
 export interface PipelineConfig {
@@ -105,7 +110,9 @@ export class ForensicPipeline {
     }
     this.processedHashes.add(proofKey);
 
-    this.log("INFO", "DETECTED", "Hook extraction fingerprint observed", {
+    this.log("INFO", "DETECTED", event.detection === "linked-origin"
+      ? "Split-contract sandwich linked by signing EOA (off-chain scanner)"
+      : "Hook extraction fingerprint observed", {
       poolId: event.poolId,
       searcher: event.searcher,
       victim: event.victim,
@@ -115,8 +122,12 @@ export class ForensicPipeline {
 
     // Cross-process dedupe: the in-memory set above only covers this process. If another indexer
     // (e.g. the deployed watcher vs. the process-tx CLI) already sealed this sandwich, skip it.
+    // Keyed on pool + block + victim: the hook path and the linked-origin path name the searcher
+    // differently (router vs EOA) but always agree on the victim, so one sandwich gets one receipt.
     const sealed = (await this.arkiv.getByPool(event.poolId)).find(
-      (r) => r.blockNumber === event.blockNumber && r.searcher.toLowerCase() === event.searcher.toLowerCase()
+      (r) =>
+        r.blockNumber === event.blockNumber &&
+        (r.victim.toLowerCase() === event.victim.toLowerCase() || r.searcher.toLowerCase() === event.searcher.toLowerCase())
     );
     if (sealed) {
       this.log("WARN", "DEDUPE", "Sandwich already sealed on Arkiv; skipping", {
@@ -180,6 +191,7 @@ export class ForensicPipeline {
         searcher: event.searcher,
         victim: event.victim,
         detectedLogIndex: event.logIndex,
+        matchBy: event.detection === "linked-origin" ? "origin" : "sender",
       });
       onchainTxHashes = sandwich.txHashes;
       beneficiary = sandwich.victimOrigin;
@@ -223,6 +235,7 @@ export class ForensicPipeline {
       // Real frontrun / victim / backrun tx hashes (identical when the sandwich landed as one bundle).
       txHashes: onchainTxHashes ?? (event.txHash ? [event.txHash, event.txHash, event.txHash] : []),
       createdAt: Date.now(),
+      detection: event.detection ?? "hook",
     };
 
     const {

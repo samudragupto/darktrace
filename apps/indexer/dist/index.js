@@ -7835,8 +7835,8 @@ function getEncodable(bytes2) {
     return getEncodableList(bytes2.map((x) => getEncodable(x)));
   return getEncodableBytes(bytes2);
 }
-function getEncodableList(list) {
-  const bodyLength = list.reduce((acc, x) => acc + x.length, 0);
+function getEncodableList(list2) {
+  const bodyLength = list2.reduce((acc, x) => acc + x.length, 0);
   const sizeOfBodyLength = getSizeOfLength(bodyLength);
   const length = (() => {
     if (bodyLength <= 55)
@@ -7859,7 +7859,7 @@ function getEncodableList(list) {
         else
           cursor.pushUint32(bodyLength);
       }
-      for (const { encode: encode5 } of list) {
+      for (const { encode: encode5 } of list2) {
         encode5(cursor);
       }
     }
@@ -9735,15 +9735,15 @@ var init_isAddressEqual = __esm({
 });
 
 // ../../node_modules/.pnpm/viem@2.57.16_bufferutil@4.1_3375ca275b166f1b0be03f1daef6f2b6/node_modules/viem/_esm/utils/formatters/log.js
-function formatLog(log, { args, eventName } = {}) {
+function formatLog(log2, { args, eventName } = {}) {
   return {
-    ...log,
-    blockHash: log.blockHash ? log.blockHash : null,
-    blockNumber: log.blockNumber ? BigInt(log.blockNumber) : null,
-    blockTimestamp: log.blockTimestamp ? BigInt(log.blockTimestamp) : log.blockTimestamp === null ? null : void 0,
-    logIndex: log.logIndex ? Number(log.logIndex) : null,
-    transactionHash: log.transactionHash ? log.transactionHash : null,
-    transactionIndex: log.transactionIndex ? Number(log.transactionIndex) : null,
+    ...log2,
+    blockHash: log2.blockHash ? log2.blockHash : null,
+    blockNumber: log2.blockNumber ? BigInt(log2.blockNumber) : null,
+    blockTimestamp: log2.blockTimestamp ? BigInt(log2.blockTimestamp) : log2.blockTimestamp === null ? null : void 0,
+    logIndex: log2.logIndex ? Number(log2.logIndex) : null,
+    transactionHash: log2.transactionHash ? log2.transactionHash : null,
+    transactionIndex: log2.transactionIndex ? Number(log2.transactionIndex) : null,
     ...eventName ? { args, eventName } : {}
   };
 }
@@ -9913,8 +9913,8 @@ function parseEventLogs(parameters) {
       return abiTopics;
     return [];
   })();
-  return logs.map((log) => {
-    const formattedLog = typeof log.blockNumber === "string" ? formatLog(log) : log;
+  return logs.map((log2) => {
+    const formattedLog = typeof log2.blockNumber === "string" ? formatLog(log2) : log2;
     const bySelector = abiTopics.filter((item) => !item.abi.anonymous && formattedLog.topics[0] === item.selector);
     const abiItems = (() => {
       if (bySelector.length > 0) {
@@ -10066,7 +10066,7 @@ async function getLogs(client, { address, blockHash, fromBlock, toBlock: toBlock
       ]
     });
   }
-  const formattedLogs = logs.map((log) => formatLog(log));
+  const formattedLogs = logs.map((log2) => formatLog(log2));
   if (!events)
     return formattedLogs;
   return parseEventLogs({
@@ -12823,7 +12823,7 @@ async function getFilterChanges(_client, { filter }) {
   });
   if (typeof logs[0] === "string")
     return logs;
-  const formattedLogs = logs.map((log) => formatLog(log));
+  const formattedLogs = logs.map((log2) => formatLog(log2));
   if (!("abi" in filter) || !filter.abi)
     return formattedLogs;
   return parseEventLogs({
@@ -12890,8 +12890,8 @@ function watchContractEvent(client, parameters) {
         if (batch)
           emit.onLogs(logs);
         else
-          for (const log of logs)
-            emit.onLogs([log]);
+          for (const log2 of logs)
+            emit.onLogs([log2]);
       };
       const getLogsInRange = (from16, to) => getAction(client, getContractEvents, "getContractEvents")({
         abi: abi2,
@@ -13000,16 +13000,16 @@ function watchContractEvent(client, parameters) {
             onData(data) {
               if (!active)
                 return;
-              const log = data.result;
+              const log2 = data.result;
               try {
                 const decoded = decodeEventLog({
                   abi: abi2,
-                  data: log.data,
+                  data: log2.data,
                   eventName,
-                  topics: log.topics,
+                  topics: log2.topics,
                   strict: strict_
                 });
-                const formatted = formatLog(log, {
+                const formatted = formatLog(log2, {
                   args: decoded.args,
                   eventName: decoded.eventName
                 });
@@ -13025,7 +13025,7 @@ function watchContractEvent(client, parameters) {
                   eventName2 = err.abiItem.name;
                   isUnnamed = err.abiItem.inputs?.some((x) => !("name" in x && x.name));
                 }
-                const formatted = formatLog(log, {
+                const formatted = formatLog(log2, {
                   args: isUnnamed ? [] : {},
                   eventName: eventName2
                 });
@@ -13431,7 +13431,7 @@ function formatTransactionReceipt(transactionReceipt, _) {
     cumulativeGasUsed: transactionReceipt.cumulativeGasUsed ? BigInt(transactionReceipt.cumulativeGasUsed) : null,
     effectiveGasPrice: transactionReceipt.effectiveGasPrice ? BigInt(transactionReceipt.effectiveGasPrice) : null,
     gasUsed: transactionReceipt.gasUsed ? BigInt(transactionReceipt.gasUsed) : null,
-    logs: transactionReceipt.logs ? transactionReceipt.logs.map((log) => formatLog(log)) : null,
+    logs: transactionReceipt.logs ? transactionReceipt.logs.map((log2) => formatLog(log2)) : null,
     to: transactionReceipt.to ? transactionReceipt.to : null,
     transactionIndex: transactionReceipt.transactionIndex ? hexToNumber(transactionReceipt.transactionIndex) : null,
     status: transactionReceipt.status ? receiptStatuses[transactionReceipt.status] : null,
@@ -16051,8 +16051,8 @@ function getEncodable2(bytes2) {
     return getEncodableList2(bytes2.map((x) => getEncodable2(x)));
   return getEncodableBytes2(bytes2);
 }
-function getEncodableList2(list) {
-  const bodyLength = list.reduce((acc, x) => acc + x.length, 0);
+function getEncodableList2(list2) {
+  const bodyLength = list2.reduce((acc, x) => acc + x.length, 0);
   const sizeOfBodyLength = getSizeOfLength2(bodyLength);
   const length = (() => {
     if (bodyLength <= 55)
@@ -16075,7 +16075,7 @@ function getEncodableList2(list) {
         else
           cursor.pushUint32(bodyLength);
       }
-      for (const { encode: encode5 } of list) {
+      for (const { encode: encode5 } of list2) {
         encode5(cursor);
       }
     }
@@ -18416,11 +18416,11 @@ function packetToBytes(packet) {
     return new Uint8Array(1);
   const bytes2 = new Uint8Array(stringToBytes(value).byteLength + 2);
   let offset = 0;
-  const list = value.split(".");
-  for (let i = 0; i < list.length; i++) {
-    let encoded = stringToBytes(list[i]);
+  const list2 = value.split(".");
+  for (let i = 0; i < list2.length; i++) {
+    let encoded = stringToBytes(list2[i]);
     if (encoded.byteLength > 255)
-      encoded = stringToBytes(encodeLabelhash(labelhash(list[i])));
+      encoded = stringToBytes(encodeLabelhash(labelhash(list2[i])));
     bytes2[offset] = encoded.length;
     bytes2.set(encoded, offset + 1);
     offset += encoded.length + 1;
@@ -19296,7 +19296,7 @@ async function getFilterLogs(_client, { filter }) {
     method: "eth_getFilterLogs",
     params: [filter.id]
   });
-  const formattedLogs = logs.map((log) => formatLog(log));
+  const formattedLogs = logs.map((log2) => formatLog(log2));
   if (!filter.abi)
     return formattedLogs;
   return parseEventLogs({
@@ -19475,7 +19475,7 @@ async function simulateBlocks(client, parameters) {
         const data = call2.error?.data ?? call2.returnData;
         const gasUsed = BigInt(call2.gasUsed);
         const maxUsedGas = call2.maxUsedGas === void 0 ? void 0 : BigInt(call2.maxUsedGas);
-        const logs = call2.logs?.map((log) => formatLog(log));
+        const logs = call2.logs?.map((log2) => formatLog(log2));
         const status = call2.status === "0x1" ? "success" : "failure";
         const result2 = abi2 && status === "success" && data !== "0x" ? decodeFunctionResult({
           abi: abi2,
@@ -19817,13 +19817,13 @@ function encodeStaticCall(address, data) {
 }
 function tokensFromLogs(logs, account) {
   const account_ = pad(account.toLowerCase(), { size: 32 });
-  return logs.filter((log) => {
-    if (log.topics[0]?.toLowerCase() !== transferEventSelector)
+  return logs.filter((log2) => {
+    if (log2.topics[0]?.toLowerCase() !== transferEventSelector)
       return false;
-    if (log.address.toLowerCase() === ethAddress)
+    if (log2.address.toLowerCase() === ethAddress)
       return false;
-    return log.topics[1]?.toLowerCase() === account_ || log.topics[2]?.toLowerCase() === account_;
-  }).map((log) => log.address.toLowerCase());
+    return log2.topics[1]?.toLowerCase() === account_ || log2.topics[2]?.toLowerCase() === account_;
+  }).map((log2) => log2.address.toLowerCase());
 }
 function isBalance(call2) {
   return call2.status === "success" && /^0x[\da-f]{64}$/i.test(call2.data);
@@ -20468,8 +20468,8 @@ function watchEvent(client, { address, args, batch = true, event, events, fromBl
         if (batch)
           emit.onLogs(logs);
         else
-          for (const log of logs)
-            emit.onLogs([log]);
+          for (const log2 of logs)
+            emit.onLogs([log2]);
       };
       const getLogsInRange = (from16, to) => getAction(client, getLogs, "getLogs")({
         address,
@@ -20571,15 +20571,15 @@ function watchEvent(client, { address, args, batch = true, event, events, fromBl
           onData(data) {
             if (!active)
               return;
-            const log = data.result;
+            const log2 = data.result;
             try {
               const { eventName, args: args2 } = decodeEventLog({
                 abi: events_ ?? [],
-                data: log.data,
-                topics: log.topics,
+                data: log2.data,
+                topics: log2.topics,
                 strict
               });
-              const formatted = formatLog(log, { args: args2, eventName });
+              const formatted = formatLog(log2, { args: args2, eventName });
               onLogs([formatted]);
             } catch (err) {
               if ((events_ || strict_) && (err instanceof AbiEventAmbiguityError || err instanceof AbiEventSignatureEmptyTopicsError || err instanceof AbiEventSignatureNotFoundError))
@@ -20592,7 +20592,7 @@ function watchEvent(client, { address, args, batch = true, event, events, fromBl
                 eventName = err.abiItem.name;
                 isUnnamed = err.abiItem.inputs?.some((x) => !("name" in x && x.name));
               }
-              const formatted = formatLog(log, {
+              const formatted = formatLog(log2, {
                 args: isUnnamed ? [] : {},
                 eventName
               });
@@ -20842,15 +20842,15 @@ async function approve(client, parameters) {
   }
   approve2.simulate = simulate;
   function extractEvent(logs) {
-    const [log] = parseEventLogs({
+    const [log2] = parseEventLogs({
       abi: erc20Abi,
       logs,
       eventName: "Approval",
       strict: true
     });
-    if (!log)
+    if (!log2)
       throw new Error("`Approval` event not found.");
-    return log;
+    return log2;
   }
   approve2.extractEvent = extractEvent;
 })(approve || (approve = {}));
@@ -21056,15 +21056,15 @@ async function transfer(client, parameters) {
   }
   transfer2.simulate = simulate;
   function extractEvent(logs) {
-    const [log] = parseEventLogs({
+    const [log2] = parseEventLogs({
       abi: erc20Abi,
       logs,
       eventName: "Transfer",
       strict: true
     });
-    if (!log)
+    if (!log2)
       throw new Error("`Transfer` event not found.");
-    return log;
+    return log2;
   }
   transfer2.extractEvent = extractEvent;
 })(transfer || (transfer = {}));
@@ -21684,6 +21684,7 @@ init_encodePacked();
 init_getAddress();
 init_isAddress();
 init_defineChain();
+init_concat();
 init_isHex();
 init_pad();
 init_fromHex();
@@ -23618,16 +23619,16 @@ function watchEntityEvents(client, parameters) {
     pollingInterval,
     onLogs: (logs) => {
       logger$7("logs %o", logs);
-      for (const log of logs) {
-        if (log.blockNumber === null || log.transactionHash === null || log.logIndex === null) continue;
+      for (const log2 of logs) {
+        if (log2.blockNumber === null || log2.transactionHash === null || log2.logIndex === null) continue;
         const context = {
-          blockNumber: log.blockNumber,
-          transactionHash: log.transactionHash,
-          logIndex: log.logIndex
+          blockNumber: log2.blockNumber,
+          transactionHash: log2.transactionHash,
+          logIndex: log2.logIndex
         };
         let event;
         try {
-          event = toEntityEvent(log.topics, log.data, context);
+          event = toEntityEvent(log2.topics, log2.data, context);
         } catch (error) {
           reportError(asError(error));
           continue;
@@ -23957,9 +23958,9 @@ function readAppliedOperations(receipt, expected) {
   const createdEntityKeys = [];
   const createdExpiries = [];
   const extendedExpiries = [];
-  for (const log of receipt.logs ?? []) {
-    if (log.address.toLowerCase() !== ARKIV_ADDRESS.toLowerCase()) continue;
-    const decoded = decodeEntityLog(log);
+  for (const log2 of receipt.logs ?? []) {
+    if (log2.address.toLowerCase() !== ARKIV_ADDRESS.toLowerCase()) continue;
+    const decoded = decodeEntityLog(log2);
     if (decoded === void 0) continue;
     if (decoded.eventName === "EntityCreated") {
       createdEntityKeys.push(decoded.args.entityKey);
@@ -23974,12 +23975,12 @@ function readAppliedOperations(receipt, expected) {
     extendedExpiries
   };
 }
-function decodeEntityLog(log) {
+function decodeEntityLog(log2) {
   try {
     return decodeEventLog({
       abi: ENTITY_EVENTS_ABI,
-      topics: log.topics,
-      data: log.data
+      topics: log2.topics,
+      data: log2.data
     });
   } catch {
     return;
@@ -24277,6 +24278,7 @@ function privateKeyToAccount(privateKey, options = {}) {
 var DEFAULT_WRITER_ADDRESS = "0xb491fe5846DE735B6Cb03a677A3C6296FAB0aDA5";
 var ARKIV_EXPLORER = "https://rabdi.explorer.arkiv.network";
 var RECEIPT_TTL_DAYS = 30;
+var OPEN_CLAIM_TTL_DAYS = 90;
 var ReceiptsSchema = defineSchema("receipts", {
   poolId: str().indexed(),
   searcher: addr().indexed(),
@@ -24289,7 +24291,9 @@ var ReceiptsSchema = defineSchema("receipts", {
   txHashes: bytes(),
   injectedSlippageBps: u64().optional(),
   legitSlippageBps: u64().optional(),
-  createdAtMs: u64().optional()
+  createdAtMs: u64().optional(),
+  detection: str().optional()
+  // "hook" | "linked-origin"; absent on entities written before it existed
 });
 var SearcherProfilesSchema = defineSchema("darktrace.searcher_profiles", {
   searcher: addr().indexed(),
@@ -24341,7 +24345,8 @@ function toReceipt(row) {
     txHashes: decodeTxHashes(v(row.txHashes)),
     injectedSlippageBps: num2(row.injectedSlippageBps),
     legitSlippageBps: num2(row.legitSlippageBps),
-    createdAtMs: num2(row.createdAtMs)
+    createdAtMs: num2(row.createdAtMs),
+    detection: v(row.detection) ?? null
   };
 }
 var cleanEnv = (v2) => (v2 ?? "").trim().replace(/^(['"])(.*)\1$/, "$2").trim();
@@ -24406,7 +24411,8 @@ var ArkivSdk = class {
         txHashes: stringToBytes(JSON.stringify(receipt.txHashes.map((h) => h.toLowerCase()))),
         injectedSlippageBps: u64(BigInt(receipt.injectedSlippageBps)),
         legitSlippageBps: u64(BigInt(receipt.legitSlippageBps)),
-        createdAtMs: u64(BigInt(receipt.createdAt))
+        createdAtMs: u64(BigInt(receipt.createdAt)),
+        ...receipt.detection ? { detection: receipt.detection } : {}
       },
       { expiration: ExpirationTime.fromDays(RECEIPT_TTL_DAYS) }
     );
@@ -24461,6 +24467,17 @@ var ArkivSdk = class {
       lastSeenBlock: Number(row.lastSeenBlock.value)
     };
   }
+  async listSearcherProfiles(limit = 50) {
+    const res = await this.reader().select().from(SearcherProfilesSchema).ownedBy(this.writerAddress).orderBy(desc("lastSeenBlock")).limit(limit).fetch();
+    return res.entities.map((row) => ({
+      ...meta(row),
+      searcher: row.searcher.value,
+      extractions: Number(row.extractions.value),
+      bondedUSDC: row.bondedUSDC.value,
+      slashedUSDC: row.slashedUSDC.value,
+      lastSeenBlock: Number(row.lastSeenBlock.value)
+    }));
+  }
   async upsertSearcherProfile(p) {
     const values = {
       searcher: addr(lower(p.searcher)),
@@ -24477,6 +24494,39 @@ var ArkivSdk = class {
     return this.writer().createEntity(SearcherProfilesSchema, values, {
       expiration: ExpirationTime.fromDays(RECEIPT_TTL_DAYS)
     });
+  }
+  /**
+   * Deliberate entity expiry policy: if a receipt has an open (unclaimed) rebate,
+   * extends its Arkiv entity lifetime to `days` (default: OPEN_CLAIM_TTL_DAYS = 90 days)
+   * using `@arkiv-network/sdk` `extendEntity` so the victim's forensic proof never expires
+   * while an attestation is still claimable on Arc.
+   */
+  async extendOpenReceiptExpiry(receiptHash, days = OPEN_CLAIM_TTL_DAYS) {
+    const receipt = await this.getReceiptByHash(receiptHash);
+    if (!receipt) {
+      throw new Error(`[arkiv] receipt ${receiptHash} not found`);
+    }
+    const claim = await this.claimForReceipt(receiptHash);
+    if (claim) {
+      return {
+        extended: false,
+        reason: "already_claimed",
+        entityKey: receipt.arkivEntityKey,
+        previousExpiresAtBlock: receipt.expiresAtBlock,
+        expiresAtBlock: receipt.expiresAtBlock
+      };
+    }
+    const { txHash, expiresAt } = await this.writer().extendEntity({
+      entityKey: receipt.arkivEntityKey,
+      expiration: ExpirationTime.fromDays(days)
+    });
+    return {
+      extended: true,
+      entityKey: receipt.arkivEntityKey,
+      txHash,
+      previousExpiresAtBlock: receipt.expiresAtBlock,
+      expiresAtBlock: expiresAt
+    };
   }
   // ── LP claims ──
   async writeLPClaim(c) {
@@ -24952,8 +25002,8 @@ var SWAP_ABI = parseAbi([
 var Q96 = 1n << 96n;
 var PIPS = 1000000n;
 var abs = (x) => x < 0n ? -x : x;
-function toSwap(log) {
-  const { args } = decodeEventLog({ abi: SWAP_ABI, data: log.data, topics: log.topics });
+function toSwap(log2) {
+  const { args } = decodeEventLog({ abi: SWAP_ABI, data: log2.data, topics: log2.topics });
   const zeroForOne = args.amount0 < 0n;
   const amountInGross = abs(zeroForOne ? args.amount0 : args.amount1);
   const fee = BigInt(args.fee);
@@ -24966,9 +25016,38 @@ function toSwap(log) {
     liquidity: args.liquidity,
     tick: args.tick,
     fee: Number(fee),
-    txHash: log.transactionHash,
-    logIndex: log.logIndex ?? 0
+    txHash: log2.transactionHash,
+    logIndex: log2.logIndex ?? 0,
+    amount0: args.amount0,
+    amount1: args.amount1
   };
+}
+function decodeSwapLogs(logs) {
+  return logs.map((l) => toSwap(l)).sort((a, b) => a.logIndex - b.logIndex);
+}
+function tickOfSqrtPrice(sqrtPriceX96) {
+  const p = Number(sqrtPriceX96) / 2 ** 96;
+  return Math.floor(Math.log(p * p) / Math.log(1.0001));
+}
+function findLinkedSandwiches(swaps, minTickDelta = 15) {
+  const found = [];
+  for (let i = 0; i + 2 < swaps.length; i++) {
+    const [f, v2, b] = [swaps[i], swaps[i + 1], swaps[i + 2]];
+    const searcher = f.origin.toLowerCase();
+    if (b.origin.toLowerCase() !== searcher) continue;
+    if (v2.origin.toLowerCase() === searcher) continue;
+    if (f.zeroForOne !== v2.zeroForOne || b.zeroForOne === f.zeroForOne) continue;
+    if (f.sender.toLowerCase() === b.sender.toLowerCase()) continue;
+    const push = f.tick - tickOfSqrtPrice(sqrtPriceBefore(f));
+    const pull = b.tick - v2.tick;
+    if (Math.abs(push) < minTickDelta || Math.abs(pull) < minTickDelta) continue;
+    if (Math.sign(push) === Math.sign(pull) || Math.abs(pull) * 100 < Math.abs(push) * 30) continue;
+    const pnl = f.zeroForOne ? f.amount0 + b.amount0 : f.amount1 + b.amount1;
+    if (pnl <= 0n) continue;
+    found.push({ frontrun: f, victim: v2, backrun: b, searcherOrigin: f.origin });
+    i += 2;
+  }
+  return found;
 }
 function sqrtPriceBefore(s) {
   const L = s.liquidity;
@@ -24992,7 +25071,18 @@ async function reconstructSandwich(client, params) {
   }
   const [frontrun, victim, backrun] = swaps.slice(-3);
   const searcher = params.searcher.toLowerCase();
-  if (frontrun.sender.toLowerCase() !== searcher || backrun.sender.toLowerCase() !== searcher || victim.sender.toLowerCase() !== params.victim.toLowerCase()) {
+  if (victim.sender.toLowerCase() !== params.victim.toLowerCase()) {
+    throw new Error("Victim swap sender does not match the detected victim");
+  }
+  if (params.matchBy === "origin") {
+    const [fo, bo] = await Promise.all([
+      client.getTransaction({ hash: frontrun.txHash }),
+      client.getTransaction({ hash: backrun.txHash })
+    ]);
+    if (fo.from.toLowerCase() !== searcher || bo.from.toLowerCase() !== searcher) {
+      throw new Error("Frontrun/backrun signers do not match the linked searcher EOA");
+    }
+  } else if (frontrun.sender.toLowerCase() !== searcher || backrun.sender.toLowerCase() !== searcher) {
     throw new Error("Swap senders do not match the ExtractionDetected searcher/victim");
   }
   const pre = sqrtPriceBefore(frontrun);
@@ -25068,7 +25158,7 @@ var ForensicPipeline = class {
       return null;
     }
     this.processedHashes.add(proofKey);
-    this.log("INFO", "DETECTED", "Hook extraction fingerprint observed", {
+    this.log("INFO", "DETECTED", event.detection === "linked-origin" ? "Split-contract sandwich linked by signing EOA (off-chain scanner)" : "Hook extraction fingerprint observed", {
       poolId: event.poolId,
       searcher: event.searcher,
       victim: event.victim,
@@ -25076,7 +25166,7 @@ var ForensicPipeline = class {
       proofHash: event.proofHash
     });
     const sealed = (await this.arkiv.getByPool(event.poolId)).find(
-      (r) => r.blockNumber === event.blockNumber && r.searcher.toLowerCase() === event.searcher.toLowerCase()
+      (r) => r.blockNumber === event.blockNumber && (r.victim.toLowerCase() === event.victim.toLowerCase() || r.searcher.toLowerCase() === event.searcher.toLowerCase())
     );
     if (sealed) {
       this.log("WARN", "DEDUPE", "Sandwich already sealed on Arkiv; skipping", {
@@ -25132,7 +25222,8 @@ var ForensicPipeline = class {
         blockNumber: BigInt(event.blockNumber),
         searcher: event.searcher,
         victim: event.victim,
-        detectedLogIndex: event.logIndex
+        detectedLogIndex: event.logIndex,
+        matchBy: event.detection === "linked-origin" ? "origin" : "sender"
       });
       onchainTxHashes = sandwich.txHashes;
       beneficiary = sandwich.victimOrigin;
@@ -25170,7 +25261,8 @@ var ForensicPipeline = class {
       simulationHash,
       // Real frontrun / victim / backrun tx hashes (identical when the sandwich landed as one bundle).
       txHashes: onchainTxHashes ?? (event.txHash ? [event.txHash, event.txHash, event.txHash] : []),
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      detection: event.detection ?? "hook"
     };
     const {
       receiptHash,
@@ -25268,25 +25360,25 @@ function startHookWatcher(config) {
       level: "INFO",
       stage: "INIT",
       message: "DarkTrace Base Sepolia Hook Watcher started",
-      hookAddress: config.hookAddress
+      hookAddresses: [].concat(config.hookAddress)
     })
   );
   const unwatch = publicClient.watchEvent({
     address: config.hookAddress,
     event: EXTRACTION_DETECTED_EVENT,
     onLogs: async (logs) => {
-      for (const log of logs) {
-        if (!log.args.poolId || !log.args.searcher || !log.args.victim) continue;
+      for (const log2 of logs) {
+        if (!log2.args.poolId || !log2.args.searcher || !log2.args.victim) continue;
         try {
           await config.pipeline.processExtraction({
-            poolId: log.args.poolId,
-            searcher: log.args.searcher,
-            victim: log.args.victim,
-            extractedValue: log.args.extractedValue ?? 0n,
-            proofHash: log.args.proofHash ?? "0x00",
-            blockNumber: Number(log.blockNumber),
-            txHash: log.transactionHash,
-            logIndex: log.logIndex ?? void 0
+            poolId: log2.args.poolId,
+            searcher: log2.args.searcher,
+            victim: log2.args.victim,
+            extractedValue: log2.args.extractedValue ?? 0n,
+            proofHash: log2.args.proofHash ?? "0x00",
+            blockNumber: Number(log2.blockNumber),
+            txHash: log2.transactionHash,
+            logIndex: log2.logIndex ?? void 0
           });
         } catch (err) {
           console.error(
@@ -25295,7 +25387,7 @@ function startHookWatcher(config) {
               level: "ERROR",
               stage: "PIPELINE_FAILED",
               message: err instanceof Error ? err.message : String(err),
-              txHash: log.transactionHash
+              txHash: log2.transactionHash
             })
           );
         }
@@ -25315,9 +25407,125 @@ function startHookWatcher(config) {
   return unwatch;
 }
 
+// src/linked-scanner.ts
+var SWAP_EVENT = parseAbiItem(
+  "event Swap(bytes32 indexed id, address indexed sender, int128 amount0, int128 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick, uint24 fee)"
+);
+var MAX_RANGE = 150n;
+var log = (level, stage, message, meta2 = {}) => console.log(JSON.stringify({ timestamp: (/* @__PURE__ */ new Date()).toISOString(), level, stage, message, ...meta2 }));
+async function scanRange(client, pools, from16, to, originCache = /* @__PURE__ */ new Map(), minTickDelta = 15) {
+  const logs = await client.getLogs({ address: POOL_MANAGER, event: SWAP_EVENT, args: { id: pools }, fromBlock: from16, toBlock: to });
+  const groups = /* @__PURE__ */ new Map();
+  for (const l of logs) {
+    const k = `${l.blockNumber}:${l.args.id}`;
+    (groups.get(k) ?? groups.set(k, []).get(k)).push(l);
+  }
+  const results = [];
+  for (const [k, group] of groups) {
+    if (group.length < 3) continue;
+    const swaps = decodeSwapLogs(group);
+    const enriched = [];
+    for (const s of swaps) {
+      let origin = originCache.get(s.txHash);
+      if (!origin) {
+        origin = (await client.getTransaction({ hash: s.txHash })).from;
+        originCache.set(s.txHash, origin);
+      }
+      enriched.push({ ...s, origin });
+    }
+    const [block, poolId] = k.split(":");
+    for (const sandwich of findLinkedSandwiches(enriched, minTickDelta)) {
+      results.push({ poolId, blockNumber: BigInt(block), sandwich });
+    }
+  }
+  return results;
+}
+function startLinkedScanner(config) {
+  const status = {
+    enabled: true,
+    pools: config.pools,
+    lastScannedBlock: null,
+    candidates: 0,
+    lastError: null
+  };
+  const originCache = /* @__PURE__ */ new Map();
+  let last = null;
+  let running = false;
+  const step = async () => {
+    if (running) return;
+    running = true;
+    try {
+      const head = await config.client.getBlockNumber();
+      if (last === null) last = head - 1n;
+      const from16 = last + 1n;
+      if (from16 > head) return;
+      const to = head - from16 > MAX_RANGE ? from16 + MAX_RANGE : head;
+      for (const { poolId, blockNumber, sandwich } of await scanRange(config.client, config.pools, from16, to, originCache, config.minTickDelta)) {
+        status.candidates += 1;
+        log("INFO", "LINKED_DETECTED", "Split-contract sandwich linked by signing EOA", {
+          poolId,
+          blockNumber: blockNumber.toString(),
+          searcherOrigin: sandwich.searcherOrigin,
+          frontrunContract: sandwich.frontrun.sender,
+          backrunContract: sandwich.backrun.sender
+        });
+        try {
+          await config.pipeline.processExtraction({
+            poolId,
+            searcher: sandwich.searcherOrigin,
+            victim: sandwich.victim.sender,
+            extractedValue: 0n,
+            proofHash: keccak256(concat([sandwich.frontrun.txHash, sandwich.victim.txHash, sandwich.backrun.txHash])),
+            blockNumber: Number(blockNumber),
+            txHash: sandwich.backrun.txHash,
+            logIndex: sandwich.backrun.logIndex,
+            detection: "linked-origin"
+          });
+        } catch (err) {
+          log("ERROR", "PIPELINE_FAILED", err instanceof Error ? err.message : String(err), { txHash: sandwich.backrun.txHash });
+        }
+      }
+      last = to;
+      status.lastScannedBlock = to.toString();
+      status.lastError = null;
+    } catch (err) {
+      status.lastError = err instanceof Error ? err.message : String(err);
+      log("WARN", "LINKED_SCAN", "scan step failed; will retry", { error: status.lastError });
+    } finally {
+      running = false;
+    }
+  };
+  const timer = setInterval(step, config.intervalMs ?? 6e3);
+  void step();
+  log("INFO", "INIT", "Linked-origin scanner started", { pools: config.pools });
+  return {
+    stop: () => {
+      clearInterval(timer);
+      status.enabled = false;
+    },
+    status
+  };
+}
+
 // src/index.ts
+var DEFAULT_HOOKS = [
+  "0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0",
+  // DarkTraceHook v1
+  "0xCeF7a999885D93f23Beeb7D319A83F2949B2c0c0"
+  // DarkTraceHook v2
+];
+var DEFAULT_POOLS = [
+  "0x2183dce5625ecbb1cf175be52a75b31eeed7bf7774181e3136ba49f6fc3c676c",
+  // tUSDC/tWETH on hook v1
+  "0x5d78af67b033875696613c57b5a68f4a62eba0d98095844b0e9c8c691afc63df"
+  // tUSDC/tWETH on hook v2
+];
+var list = (v2, fallback) => v2 ? v2.split(",").map((x) => x.trim()).filter(Boolean) : [...fallback];
 async function main() {
-  const hookAddress = process.env.HOOK_ADDRESS || "0x00000000000000000000000000000000000000C0";
+  const hookAddresses = list(process.env.HOOK_ADDRESS, DEFAULT_HOOKS);
+  const hookAddress = hookAddresses[0];
+  const watchPools = list(process.env.WATCH_POOLS, DEFAULT_POOLS);
+  const linkedScan = process.env.LINKED_SCAN !== "0";
   const demoFast = process.env.DEMO_FAST === "1";
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8080;
   const arkivMemory = process.env.ARKIV_DEV_MODE === "memory";
@@ -25328,6 +25536,9 @@ async function main() {
       stage: "BOOTSTRAP",
       message: "DarkTrace Forensic Indexer Service initialized",
       hookAddress,
+      hookAddresses,
+      watchPools,
+      linkedScan,
       demoFast,
       port,
       arkiv: arkivMemory ? "memory (offline)" : "live (Rabdi 7794095)",
@@ -25350,9 +25561,14 @@ async function main() {
     demoFast
   });
   const unwatch = startHookWatcher({
-    hookAddress,
+    hookAddress: hookAddresses,
     pipeline
   });
+  const baseClient = createPublicClient({
+    chain: baseSepolia,
+    transport: http(process.env.BASE_SEPOLIA_RPC || "https://sepolia.base.org")
+  });
+  const scanner = linkedScan ? startLinkedScanner({ client: baseClient, pools: watchPools, pipeline }) : null;
   const server = import_node_http.default.createServer((req, res) => {
     const url = req.url || "/";
     if (url === "/health" || url === "/" || url.startsWith("/api/indexer/health") || url === "/api/indexer") {
@@ -25362,7 +25578,10 @@ async function main() {
           status: "healthy",
           service: "indexer",
           hookAddress,
+          // kept for existing dashboards: the first watched hook
+          hookAddresses,
           arkivWriter,
+          linkedScanner: scanner ? scanner.status : { enabled: false },
           timestamp: (/* @__PURE__ */ new Date()).toISOString()
         })
       );
@@ -25391,6 +25610,7 @@ async function main() {
       })
     );
     unwatch();
+    scanner?.stop();
     server.close();
     process.exit(0);
   });
