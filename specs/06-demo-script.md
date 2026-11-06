@@ -1,78 +1,60 @@
-# DarkTrace — 3-Minute Video Demo Script
+# DarkTrace — 2:30–3:00 Video Demo Script
 
 **Event**: ETHGlobal Mumbai 2026  
-**Format**: ~3:00, 1080p, real voiceover (no text-to-speech, no video speedup)  
-**Target Prizes**: Uniswap Foundation, Arc, Arkiv  
+**Format**: ~2:45, 1080p, real voiceover (no text-to-speech, no video speedup)  
+**Target Prizes**: Uniswap Foundation, Arc, Arkiv, ETHGlobal Top-10 Finalist
 
 ---
 
-## Pre-Recording Setup Checklist
-- [ ] Have an Arc Studio tab open at [https://studio.arc.io](https://studio.arc.io) showing the generated and verified `SimulationRegistry` and `RebateVault` contracts (60 passing tests).
-- [ ] Have `https://rabdi.explorer.arkiv.network/entity/0xc327d5db4aa3098b80dc8729d090317408f98d19e1e19c13d6cf83494a05f8ca` open in an adjacent browser tab.
-- [ ] Verify both tabs and the live application (`https://darktrace-lovat.vercel.app`) load crisply from a clean profile at 100% zoom.
-- [ ] Wallet connected to Arc Testnet with address holding testnet gas.
+## Pre-Recording Browser Tabs (in order)
+1. **Tab 1 — Live App Dashboard:** `https://darktrace-lovat.vercel.app/dashboard`
+2. **Tab 2 — Base Sepolia 3-Tx Sandwich (Block #55,152,258) & Hook v2 (Block #55,162,450):**
+   - Backrun + `ExtractionDetected` event: `https://base-sepolia.blockscout.com/tx/0x6dd63c93a3945d7f737b64350f480cbafc3a5032b0442b3dbef4c6d72f84f5d9`
+   - Hook v2 detection: `https://base-sepolia.blockscout.com/tx/0xef694630199a91f86c1b8cdae55b0f3192373d7e776d7d3032fd2aa120a051c8`
+3. **Tab 3 — Live Receipt Page ("Live from Arkiv Rabdi"):**
+   - Verified Run #2 (`REBATED`): `https://darktrace-lovat.vercel.app/receipt/0xe191f885168d1d06b6c7d27ef00504d58f7661c7da5adc8c3a79aaf8bb72959a`
+   - Hook v2 Open-Claim Receipt (`ARCHIVED`, 90d TTL): `https://darktrace-lovat.vercel.app/receipt/0x2d992c83c11668835db493c4637772c03166a7f89ef82e2e3cec057493ffef1c`
+4. **Tab 4 — Arkiv Rabdi Explorer:** `https://rabdi.explorer.arkiv.network/entity/0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27`
+5. **Tab 5 — Arc Testnet Explorer & Arc Studio:**
+   - `NotBeneficiary` revert proof: `https://explorer.testnet.arc.io/tx/0xef11bca9a7f4b64983a2404834cdf1c817c1aeda334a73f0958cfa3aeddca8eb`
+   - Victim EOA `3.539977 USDC` claim: `https://explorer.testnet.arc.io/tx/0xb72bd280acafa1f1cec3f6738066070e1bc0940408348ed530fb54b39df1fd00`
+   - Arc Studio project: `https://studio.arc.io/app/c3240360-99a1-4a97-b03e-5e547be78a32`
 
 ---
 
-### [0:00 – 0:15] Arc Studio Provenance & Problem Statement
-* **Visual**: One frame of the Arc Studio project page on `studio.arc.io` displaying `SimulationRegistry.sol` and `RebateVault.sol` (60 passing unit and invariant tests). Then snap directly to `http://localhost:3000/dashboard` (or `https://darktrace-lovat.vercel.app/dashboard`). Camera zooms slightly into the surveillance metrics showing:
-  - 3 Monitored Pools `[DEMO DATA]`
-  - $3.75 Extracted (24h) `[DEMO DATA]`
-  - $5.00 USDC Vault Reserve on Arc (Live On-Chain)
+### [0:00 – 0:10] Problem Statement (5–10s)
+* **Visual**: Start on `/dashboard` showing live counters (`Extracted (Arkiv)`, `Vault Reserve (Arc)`, `Receipts on Arkiv`) and the Searcher Leaderboard.
 * **Voiceover**:
-  > *"Every contract in DarkTrace was written and deployed through Arc Studio. The SimulationRegistry and RebateVault on Arc Testnet are here—at studio.arc.io—the same code you're about to watch settle a live USDC rebate. LPs are losing over a billion dollars annually to MEV extraction. DarkTrace solves this: Uniswap v4 hooks detect the extraction, Arkiv seals the proof, and LPs get their USDC back on Arc."*
+  > *"Uniswap LPs and traders lose over a billion dollars a year to sandwich MEV. Existing hooks try to block swaps in `beforeSwap`, adding latency and false positives. DarkTrace separates detection from execution: our Uniswap v4 hook fingerprints sandwiches on-chain, Arkiv seals a verifiable receipt, and victims claim USDC restitution on Arc."*
 
 ---
 
-### [0:15 – 0:45] Live Attack Detection (Base Sepolia Hook)
-* **Visual**: Click navigation to `/demo`. Cursor moves to top right and clicks the amber button: **`[Trigger Sandwich]`**.
-* **Visual**: The radar pulse activates. A new row animates immediately into the left table stream:
-  - Timestamp: `22:54:10.120`
-  - Pool: `WETH / USDC`
-  - Victim: `0x2222…2222`
-  - Status Pill: `DETECTED` (amber)
-  - Extracted ticker animates up to `$1.25`.
+### [0:10 – 0:45] Real Sandwich Tx on Base Sepolia & Hook v2 Event
+* **Visual**: Switch to **Tab 2** (Base Sepolia Block `#55,152,258` and Hook v2 `#55,162,450` on Blockscout/Basescan). Highlight the 3 transactions in one block (`0xa9a12ef2…` frontrun by operator `0xb491…aDA5`, `0x23984ec7…` victim swap by separate Victim EOA `0x524e…51Db`, and `0x6dd63c93…` backrun) and the `ExtractionDetected` event log.
 * **Voiceover**:
-  > *"Here on Base Sepolia, a searcher just executed a 3-transaction sandwich attack against our Uniswap v4 pool. In `beforeSwap` and `afterSwap`, our hook uses Cancun transient storage—`tstore`—to record tick displacement and sender addresses without touching swap execution. When the searcher's backrun inverses the tick within the same block, the hook flags the fingerprint and emits `ExtractionDetected`."*
+  > *"Here on Base Sepolia block 55,152,258 is a real 3-transaction sandwich where the searcher and victim are two separate wallets. Inside `beforeSwap` and `afterSwap`, `DarkTraceHook` uses EIP-1153 `tstore` to measure intra-swap tick displacement without touching swap execution. In Hook v2 at `0xCeF7…c0c0`, we cut clean-swap gas by 53.7 percent and enforce a `BalanceDelta` profit-consistency check so two independent traders or an unprofitable round-trip never trigger a false positive."*
 
 ---
 
-### [0:45 – 1:30] Counterfactual Simulation Breakdown
-* **Visual**: The status pill automatically transitions to `SIMULATED` (blue). Click the receipt to inspect the right column:
-  - Extracted USDC Loss: `$1.25`
-  - Injected MEV: `+187 bps`
-  - Natural Slippage: `12 bps`
-  - LP LVR Impact: `-$1.21`
+### [0:45 – 1:25] Receipt Page ("Live from Arkiv Rabdi") & Counterfactual Math
+* **Visual**: Switch to **Tab 3** (`/receipt/0xe191f885…959a` and `/receipt/0x2d992c83…ef1c`) and **Tab 4** (`rabdi.explorer.arkiv.network`). Point out the purple **"Live from Arkiv Rabdi · chain 7794095"** provenance strip, the slippage decomposition (`+35 bps` injected vs `90 bps` natural = `$3.54 USDC` lost), the `$key` link (`0x2286e8a0…5d27`), and the `EXTENDED TO 90d (OPEN CLAIM)` badge on the unclaimed Hook v2 receipt (`$key 0x259dc288…0fd2`).
 * **Voiceover**:
-  > *"Our off-chain simulator on Arc instantly receives the event. Instead of guessing, it performs a deterministic counterfactual calculation against pre-attack reserves using Viem. Notice this breakdown: the victim suffered 187 basis points of slippage. But the counterfactual proves legitimate market slippage was only 12 basis points. Exactly 175 basis points of the user's execution was artificial toxic injection, extracting $1.25 from the trade."*
+  > *"Our indexer reconstructs the pre-attack pool state from `PoolManager` `Swap` logs and prices the victim trade twice with the constant-product counterfactual formula. The victim lost 3.54 USDC to injected frontrun slippage. That receipt is sealed on Arkiv Rabdi with `@arkiv-network/sdk` and read back live on every page. Unclaimed receipts have their Arkiv entity expiry deliberately extended from 30 to 90 days via `extendEntity`, and our Searcher Profile page reads the live `SearcherProfile` entity directly from Arkiv."*
 
 ---
 
-### [1:30 – 2:05] Cryptographic Proof Sealing on Arkiv Rabdi Testnet
-* **Visual**: The status pill turns to `ARCHIVED` (purple).
-* **Visual**: Highlight the `Canonical Receipt Hash` (`0x9c8d…abcd`) and the `Arkiv Proof Record` (`arkiv://darktrace.v1/receipt/...`).
-* **Visual**: Cut for 3 seconds to `rabdi.explorer.arkiv.network` showing the live verified entity (`0xc327...f8ca`) on chain. Cut back to `/receipt/[hash]` to show the full immutable receipt record and transaction hashes.
+### [1:25 – 2:05] Arc USDC Rebate Claim, `NotBeneficiary` Guard & Escrow Logic
+* **Visual**: Scroll to the **Settlement · Arc Testnet RebateVault v2** panel on `/receipt` and switch to **Tab 5** (Arc Explorer + Arc Studio). Show:
+  1. Attestation tx `0xf4e1fa19…744ca4` binding `beneficiary = 0x524e…51Db`.
+  2. Reverted tx `0xef11bca9…dca8eb` where the operator tried to claim and reverted with `NotBeneficiary`.
+  3. Successful claim tx `0xb72bd280…f1fd00` where the Victim EOA claimed `3.539977 USDC`.
+  4. The Arc Studio project and Escrow Dispute Window (`flagDispute` / `resolveDispute` in tx `0x0915cb01…` and `0x8aa76387…`) + `expireUnclaimedRebate`.
 * **Voiceover**:
-  > *"The simulator serializes this forensic evidence into an immutable `ExtractionReceipt` under `darktrace.v1` on Arkiv. Written by wallet 0xb491fe5846DE735B6Cb03a677A3C6296FAB0aDA5. The entity is live on rabdi.explorer.arkiv.network—the exact query to verify it is in our README. Arkiv acts as the permanent, decentralized proof ledger. Once sealed, neither the searcher nor the LP can alter the facts of what happened in that block."*
+  > *"On Arc Testnet, `SimulationRegistry` v2 binds the attestation to the victim's wallet address. When the operator wallet attempted `claimRebate` in tx `0xef11bca9…`, `RebateVault` v2 reverted on-chain with `NotBeneficiary`. When the victim wallet signed `claimRebate` in tx `0xb72bd280…`, the vault paid out 3.539977 native USDC and sealed the `LPClaim` on Arkiv. We also deployed an escrow dispute window and claim-expiry reserve recycling on Arc."*
 
 ---
 
-### [2:05 – 2:45] USDC Restitution Claim on Arc & Base Sepolia Bond Attestation
-* **Visual**: Return to `/demo`. The green button unlocks: **`[Claim $1.25 USDC Rebate]`**.
-* **Visual**: Click the claim button. A brief confirmation pulse appears.
-* **Visual**: Status switches to `REBATED` (mint green).
-* **Visual**: The top counter **`LP USDC BALANCE (ARC)`** ticks up from `$15.00` to **`$16.25 USDC`** (drawing against the **`$5.00 USDC`** live `RebateVault` reserve).
-* **Visual**: Click through to `/searcher/0x1111...` showing `bond reduced (Base Sepolia, forensic only)` by `$2.10 USDC` across observed Base Sepolia extractions.
+### [2:05 – 2:45] Why Each Partner Is Essential & Honest Limits
+* **Visual**: Click `/demo` and toggle **"1. Replay Verified On-Chain Runs (Real Data)"** vs **"2. Browser Simulation Sandbox [DEMO]"**. Show the README table of verified transactions and honest disclosures.
 * **Voiceover**:
-  > *"Now, the restitution. On Arc, Circle's USDC-native Layer-1, `SimulationRegistry.sol` verifies the simulation hash, and `RebateVault.sol`—pre-funded with 5.00 USDC on-chain—releases $1.25 USDC directly to the LP. Watch the balance tick up in real time from $15.00 to $16.25 USDC. Independently on Base Sepolia, `SearcherRegistry` records a local forensic bond reduction against the searcher."*
-
----
-
-### [2:45 – 3:00] Architecture Summary & Closing
-* **Visual**: Switch to `/dashboard` showing the monitored pools list and architecture summary:
-  1. Base Sepolia (Uniswap v4 Hook)
-  2. Arc Testnet (Arc Studio Deployed Vault & Simulation Registry)
-  3. Arkiv Rabdi Testnet (Decentralized Proof Ledger)
-  - GitHub repo URL + MIT License.
-* **Voiceover**:
-  > *"Any Uniswap v4 pool can opt into DarkTrace by attaching our lightweight hook. The Arkiv receipt becomes the searcher's on-chain credit score, and Arc provides predictable, low-cost USDC settlement. DarkTrace: MEV forensics for Uniswap v4 LPs. Hooks detect it, Arkiv seals it, and Arc pays it back. Thank you."*
+  > *"Why are all three partners essential? Only a Uniswap v4 hook sees exact intra-block pre- and post-swap ticks and `BalanceDelta` at execution time. Only Arkiv provides a decentralized, owner-verifiable entity ledger with programmable TTLs so receipts aren't trapped in a private database. And Arc gives victims sub-second native 6-decimal USDC restitution. To be completely transparent about scope: our testnet attacks are scripted from two separate wallets for reproducible verification, single-range CPMM math is used off-chain, and Base Sepolia searcher bonds do not bridge across chains—the Arc vault is pre-funded on testnet. DarkTrace: hooks detect it, Arkiv seals it, and Arc pays it back."*

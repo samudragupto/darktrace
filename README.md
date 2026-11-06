@@ -100,9 +100,9 @@ Judges should be able to tell at a glance what runs for real.
 | `DarkTraceHook`, `SearcherRegistry` on Base Sepolia | **Deployed** |
 | `SimulationRegistry`, `RebateVault` on Arc Testnet | **Deployed.** v1 paid out **3.57 USDC** in Verified Run #1; beneficiary-gated v2 (`0xd501…61a2` / `0x238d…4d5b`) was topped up to **5.00 USDC**, blocked an unauthorized operator claim (`NotBeneficiary`), and **paid out 3.54 USDC to the separate Victim EOA** in Verified Run #2 (`1.460023 USDC` reserve remaining) |
 | Indexer watching the hook | **Live** (`/api/indexer/health` reports the hook address and `arkivWriter`) |
-| Arkiv receipts & claims | **Live.** Written with the SDK, read by `/dashboard`, `/receipt`, `/pool`, `/searcher`, `/lp`, `/api/stats` |
-| Arc vault USDC reserve | **Live** on-chain `balanceOf` read in `/api/stats` and on `/dashboard` |
-| `/demo` walkthrough | **Simulated in the browser.** It replays the pipeline and does not broadcast the rebate claim |
+| Arkiv receipts, claims & searcher profiles | **Live.** Written with the SDK (`30d` standard TTL, extended to `90d` for open claims), read by `/dashboard`, `/receipt`, `/pool`, `/searcher`, `/lp`, `/api/stats` (`ON-CHAIN` vs `SYNTHETIC [DEMO]` labeled in UI) |
+| Arc vault USDC reserve & interactive claim | **Live.** On-chain `balanceOf` read in `/api/stats` and `/dashboard`; `/receipt/[hash]` includes a live wagmi **Claim Rebate** panel that checks `beneficiary` on Arc v2, calls `claimRebate`, and seals `LPClaim` on Arkiv |
+| `/demo` walkthrough | **Dual-mode:** **(1) Replay Verified On-Chain Runs** (driven by real Base Sepolia, Arkiv, and Arc tx/entity data for Verified Run #2, Hook v2 Run, and Verified Run #1) and **(2) Browser Simulation Sandbox `[DEMO]`** |
 | Pool TVL / 24h volume on the dashboard | **Illustrative**, marked `[DEMO]` in the UI |
 
 ---
@@ -299,6 +299,8 @@ All contracts, tokens and data feeds run on Base Sepolia, Arc Testnet and Arkiv 
 - **Arc Studio package & test report:** [`arc-studio/report.md`](arc-studio/report.md)
 - **Arkiv integration package:** [`arkiv/README.md`](arkiv/README.md)
 - **Final submission checklist:** [`specs/submission/FINAL-SUBMISSION-CHECKLIST.md`](specs/submission/FINAL-SUBMISSION-CHECKLIST.md)
+- **Booth Q&A sheet:** [`specs/submission/qa-prep.md`](specs/submission/qa-prep.md)
+- **2–3 min video script:** [`specs/06-demo-script.md`](specs/06-demo-script.md)
 
 ---
 
