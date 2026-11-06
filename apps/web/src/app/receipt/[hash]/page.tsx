@@ -34,7 +34,7 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
       ok={res.ok}
       queriedAt={res.queriedAt}
       error={res.ok ? undefined : res.error}
-      query={`select * from receipts where receiptHash = ${hash.slice(0, 10)}… ownedBy(writer)`}
+      query={`select * from receipts where receiptHash = ${hash.slice(0, 10)}… ownedBy(writer) · lp_claims`}
       count={res.ok ? (res.data ? 1 : 0) : undefined}
       writer={writer}
     />
@@ -98,9 +98,24 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {receipt.isSynthetic && (
+              <span className="px-2 py-1 text-[11px] border border-accent/40 bg-accent/10 text-accent rounded font-semibold uppercase">
+                FIXTURE (SDK SMOKE TEST)
+              </span>
+            )}
             <StatusPill status={receipt.status} />
           </div>
         </div>
+
+        {receipt.isSynthetic && (
+          <div className="p-3 border border-accent/40 bg-accent/10 rounded text-xs font-mono text-accent">
+            <strong>Data Quality Notice:</strong> This entity was written by{" "}
+            <code className="text-text">scripts/arkiv-write-test.ts</code> as an Arkiv SDK round-trip fixture using
+            synthetic placeholder addresses (<code className="text-text">0x1111…</code> /{" "}
+            <code className="text-text">0x2222…</code>) and tx hashes (<code className="text-text">0xaaaa1111…</code>).
+            Real Base Sepolia sandwich receipts have no <code className="text-text">FIXTURE</code> badge.
+          </div>
+        )}
 
         {/* Slippage Decomposition */}
         <div className="p-4 border border-border rounded bg-bg space-y-2">
@@ -169,8 +184,13 @@ export default async function ReceiptPage({ params }: ReceiptPageProps) {
 
           <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <span className="text-muted">Created / Expires (Arkiv block):</span>
-            <span className="text-text tabular-nums flex items-center gap-1">
+            <span className="text-text tabular-nums flex flex-wrap items-center gap-1.5">
               <Database className="w-3.5 h-3.5 text-muted" />#{receipt.createdAtBlock} → #{receipt.expiresAtBlock}
+              {receipt.hasExtendedExpiry && (
+                <span className="px-1.5 py-0.5 text-[10px] border border-[#BC8CFF]/40 bg-[#BC8CFF]/10 text-[#BC8CFF] rounded font-semibold">
+                  EXTENDED TO 90d (OPEN CLAIM)
+                </span>
+              )}
             </span>
           </div>
 

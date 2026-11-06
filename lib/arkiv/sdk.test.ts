@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ArkivSdk, normalizePrivateKey } from "./sdk";
+import { ArkivSdk, normalizePrivateKey, isSyntheticReceipt, RECEIPT_TTL_DAYS, OPEN_CLAIM_TTL_DAYS } from "./sdk";
 
 // Throwaway, well-known test key (never funded).
 const KEY = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
@@ -47,4 +47,28 @@ test("LPClaim lookup by receiptHash is case-insensitive and distinguishes claime
 
   assert.equal(byReceipt.has(claimedHash.toLowerCase()), true);
   assert.equal(byReceipt.has(unclaimedHash.toLowerCase()), false);
+});
+
+test("isSyntheticReceipt distinguishes SDK smoke-test fixtures from real Base Sepolia sandwich receipts", () => {
+  assert.equal(
+    isSyntheticReceipt({
+      searcher: "0x1111111111111111111111111111111111111111",
+      victim: "0x2222222222222222222222222222222222222222",
+      txHashes: ["0xaaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111"],
+    }),
+    true
+  );
+  assert.equal(
+    isSyntheticReceipt({
+      searcher: "0xc31545299093C46d87752cD6378A811BFDD9940D",
+      victim: "0x942823FD44c68d77Ad631f0aa4DEA35143E52488",
+      txHashes: [
+        "0xa9a12ef232d1df4a38a56cf10ef5566f71a36798b4b4109eebf89a05658ba48c",
+        "0x23984ec70d7fc514697be40d8bb7500941ecbed350181a75b7fcb79e7ea772c4",
+        "0x6dd63c93a3945d7f737b64350f480cbafc3a5032b0442b3dbef4c6d72f84f5d9",
+      ],
+    }),
+    false
+  );
+  assert.ok(OPEN_CLAIM_TTL_DAYS > RECEIPT_TTL_DAYS);
 });

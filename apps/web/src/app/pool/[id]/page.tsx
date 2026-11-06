@@ -99,7 +99,7 @@ export default async function PoolPage({ params }: PoolPageProps) {
           ok={res.ok}
           queriedAt={res.queriedAt}
           error={res.ok ? undefined : res.error}
-          query={`select * from receipts where poolId = ${params.id.slice(0, 10)}… ownedBy(writer)`}
+          query={`select * from receipts where poolId = ${params.id.slice(0, 10)}… ownedBy(writer) · lp_claims`}
           count={res.ok ? poolReceipts.length : undefined}
           writer={writerAddress()}
         />

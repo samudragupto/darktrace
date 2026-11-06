@@ -14,6 +14,21 @@ import { ExtractionReceipt, LPClaim, SearcherProfile, computeReceiptHash } from 
 export const DEFAULT_WRITER_ADDRESS = "0xb491fe5846DE735B6Cb03a677A3C6296FAB0aDA5" as const;
 export const ARKIV_EXPLORER = "https://rabdi.explorer.arkiv.network";
 export const RECEIPT_TTL_DAYS = 30;
+/** Unclaimed receipts have their Arkiv expiry extended to 90 days so victims never lose forensic proof while a claim is open. */
+export const OPEN_CLAIM_TTL_DAYS = 90;
+
+/**
+ * Returns true if the receipt is the initial SDK smoke-test fixture (written by scripts/arkiv-write-test.ts
+ * with placeholder addresses 0x1111… / 0x2222… and synthetic txHashes 0xaaaa1111…) rather than a real Base Sepolia sandwich.
+ */
+export function isSyntheticReceipt(r: Pick<ArkivReceipt, "txHashes" | "searcher" | "victim">): boolean {
+  const s = r.searcher.toLowerCase();
+  const v = r.victim.toLowerCase();
+  if (s === "0x1111111111111111111111111111111111111111" || v === "0x2222222222222222222222222222222222222222") {
+    return true;
+  }
+  return r.txHashes.some((h) => /^0x(aaaa1111|bbbb2222|cccc3333)/i.test(h));
+}
 
 // ─── Schemas ────────────────────────────────────────────────────────────────
 // Schema name "receipts" is kept so entities written before this change still match.
@@ -303,6 +318,24 @@ export class ArkivSdk {
     };
   }
 
+  async listSearcherProfiles(limit = 50): Promise<ArkivSearcherProfile[]> {
+    const res = await this.reader()
+      .select()
+      .from(SearcherProfilesSchema)
+      .ownedBy(this.writerAddress)
+      .orderBy(desc("lastSeenBlock"))
+      .limit(limit)
+      .fetch();
+    return res.entities.map((row) => ({
+      ...meta(row),
+      searcher: row.searcher.value,
+      extractions: Number(row.extractions.value),
+      bondedUSDC: row.bondedUSDC.value,
+      slashedUSDC: row.slashedUSDC.value,
+      lastSeenBlock: Number(row.lastSeenBlock.value),
+    }));
+  }
+
   async upsertSearcherProfile(p: SearcherProfile) {
     const values = {
       searcher: addr(lower(p.searcher)),
@@ -319,6 +352,40 @@ export class ArkivSdk {
     return this.writer().createEntity(SearcherProfilesSchema, values, {
       expiration: ExpirationTime.fromDays(RECEIPT_TTL_DAYS),
     });
+  }
+
+  /**
+   * Deliberate entity expiry policy: if a receipt has an open (unclaimed) rebate,
+   * extends its Arkiv entity lifetime to `days` (default: OPEN_CLAIM_TTL_DAYS = 90 days)
+   * using `@arkiv-network/sdk` `extendEntity` so the victim's forensic proof never expires
+   * while an attestation is still claimable on Arc.
+   */
+  async extendOpenReceiptExpiry(receiptHash: string, days = OPEN_CLAIM_TTL_DAYS) {
+    const receipt = await this.getReceiptByHash(receiptHash);
+    if (!receipt) {
+      throw new Error(`[arkiv] receipt ${receiptHash} not found`);
+    }
+    const claim = await this.claimForReceipt(receiptHash);
+    if (claim) {
+      return {
+        extended: false as const,
+        reason: "already_claimed" as const,
+        entityKey: receipt.arkivEntityKey,
+        previousExpiresAtBlock: receipt.expiresAtBlock,
+        expiresAtBlock: receipt.expiresAtBlock,
+      };
+    }
+    const { txHash, expiresAt } = await this.writer().extendEntity({
+      entityKey: receipt.arkivEntityKey,
+      expiration: ExpirationTime.fromDays(days),
+    });
+    return {
+      extended: true as const,
+      entityKey: receipt.arkivEntityKey,
+      txHash,
+      previousExpiresAtBlock: receipt.expiresAtBlock,
+      expiresAtBlock: expiresAt,
+    };
   }
 
   // ── LP claims ──
