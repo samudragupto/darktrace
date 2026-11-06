@@ -2,45 +2,198 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Dark workspace palette (RGB channels so Tailwind opacity modifiers work).
+ * Wallet-style dark mode: near-black ground, raised gray cards, light text.
+ * Every text token clears 4.5:1 on bg, surface and surface-2.
+ */
 :root {
-  --bg: #0A0B0D;
-  --surface: #121418;
-  --border: #1F2328;
-  --text: #E6E8EB;
-  --muted: #8B929B;
-  --accent: #F0B429;
-  --danger: #E5484D;
-  --good: #3DD68C;
+  color-scheme: dark;
+  --c-bg: 18 19 21; /* #121315 page ground */
+  --c-surface: 28 30 33; /* #1C1E21 cards */
+  --c-surface-2: 38 41 45; /* #26292D wells, inputs, table heads */
+  --c-border: 48 52 57; /* #303439 */
+  --c-text: 236 238 241; /* #ECEEF1 */
+  --c-muted: 163 170 180; /* #A3AAB4 */
+  --c-ink: 243 244 246; /* primary pill fill: near-white */
+  --c-on-ink: 18 19 21;
+  --c-accent: 240 180 41; /* #F0B429 amber, detected */
+  --c-danger: 255 107 111; /* #FF6B6F loss */
+  --c-good: 61 214 140; /* #3DD68C rebated */
+  --c-arkiv: 188 140 255; /* #BC8CFF Arkiv / archived */
+  --c-info: 88 166 255; /* #58A6FF simulated */
+  --focus: 240 180 41;
+}
+
+/*
+ * Live-data panels (hashes, transaction sequences, charts, activity) sit one step
+ * deeper than the cards so they still read as their own layer.
+ */
+.ink {
+  color-scheme: dark;
+  --c-bg: 10 11 13; /* #0A0B0D */
+  --c-surface: 20 22 25; /* #141619 */
+  --c-surface-2: 27 30 34; /* #1B1E22 */
+  --c-border: 40 44 49; /* #282C31 */
+  background-color: rgb(var(--c-bg));
+  color: rgb(var(--c-text));
+  border: 1px solid rgb(var(--c-border));
 }
 
 body {
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: rgb(var(--c-bg));
+  color: rgb(var(--c-text));
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Monospace numbers and hashes with strict tabular alignment */
+/* Keyboard focus: one consistent amber ring. */
+:focus-visible {
+  outline: 2px solid rgb(var(--focus));
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Browser surfaces themed from the palette */
+::selection {
+  background: rgb(240 180 41 / 0.35);
+  color: rgb(var(--c-text));
+}
+
+input,
+textarea {
+  caret-color: rgb(var(--c-text));
+}
+
+html {
+  scrollbar-color: #3a3f45 transparent;
+}
+
+.ink {
+  scrollbar-color: #2a2e33 transparent;
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+/*
+ * Floating widgets: cards, dark panels, nav tabs and pill controls lift toward the
+ * cursor. Pointer devices only, and never when the visitor asks for reduced motion.
+ */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  main .rounded-card,
+  header nav a,
+  main button[aria-pressed],
+  main a.rounded-full,
+  main button.rounded-full {
+    transition:
+      transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease;
+    will-change: transform;
+  }
+
+  main .rounded-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 2px 6px rgb(0 0 0 / 0.3),
+      0 22px 44px -18px rgb(0 0 0 / 0.7);
+  }
+
+  main .ink.rounded-card:hover {
+    box-shadow:
+      0 4px 10px rgb(0 0 0 / 0.4),
+      0 28px 56px -20px rgb(0 0 0 / 0.85);
+  }
+
+  header nav a:hover,
+  main button[aria-pressed]:hover,
+  main a.rounded-full:hover,
+  main button.rounded-full:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -8px rgb(0 0 0 / 0.7);
+  }
+
+  header nav a:active,
+  main button[aria-pressed]:active,
+  main a.rounded-full:active,
+  main button.rounded-full:active {
+    transform: translateY(0);
+  }
+}
+
+/* Horizontal nav strip on phones: swipeable, no visible bar */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Skip link: hidden until focused, then pinned top-left above the shell */
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 50;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: rgb(var(--c-ink));
+  color: rgb(var(--c-on-ink));
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+/* Inline code inside explanatory copy */
+.prose-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.92em;
+  padding: 0.05em 0.35em;
+  border-radius: 6px;
+  background: rgb(var(--c-surface-2));
+  border: 1px solid rgb(var(--c-border));
+  color: rgb(var(--c-text));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Numbers and hashes with strict tabular alignment */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Custom scrollbars matching dark terminal theme */
+/* Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A0B0D;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1F2328;
-  border-radius: 3px;
+  background: rgb(var(--c-border));
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2D3139;
+  background: rgb(var(--c-muted) / 0.5);
 }
-

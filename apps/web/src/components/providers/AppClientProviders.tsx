@@ -8,18 +8,18 @@ import { wagmiConfig } from "@/config/wagmi";
 import "@rainbow-me/rainbowkit/styles.css";
 
 const customForensicTheme = darkTheme({
-  accentColor: "#F0B429",
-  accentColorForeground: "#0A0B0D",
-  borderRadius: "small",
+  accentColor: "#F3F4F6",
+  accentColorForeground: "#121315",
+  borderRadius: "large",
   fontStack: "system",
   overlayBlur: "none",
 });
 
-// Override colors for terminal-forensic consistency
-customForensicTheme.colors.modalBackground = "#121418";
-customForensicTheme.colors.modalBorder = "#1F2328";
-customForensicTheme.colors.modalText = "#E6E8EB";
-customForensicTheme.colors.modalTextSecondary = "#8B929B";
+// Match the dark workspace palette
+customForensicTheme.colors.modalBackground = "#1C1E21";
+customForensicTheme.colors.modalBorder = "#303439";
+customForensicTheme.colors.modalText = "#ECEEF1";
+customForensicTheme.colors.modalTextSecondary = "#A3AAB4";
 
 interface AppClientProvidersProps {
   children: ReactNode;

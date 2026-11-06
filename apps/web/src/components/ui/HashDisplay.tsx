@@ -40,7 +40,7 @@ export function HashDisplay({
   return (
     <span className={`inline-flex items-center gap-1.5 font-mono text-xs max-w-full ${className}`}>
       <span
-        className={`text-text hover:underline cursor-pointer select-all ${truncate ? "" : "break-all"}`}
+        className={`text-text select-all ${truncate ? "whitespace-nowrap" : "break-all"}`}
         title={hash}
       >
         {display}
@@ -49,16 +49,20 @@ export function HashDisplay({
         <button
           onClick={handleCopy}
           type="button"
-          className="text-muted hover:text-accent transition-colors p-0.5 rounded focus:outline-none"
-          title="Copy full hash"
+          className="text-muted hover:text-text transition-colors p-1 -m-0.5 rounded-md shrink-0"
+          title={copied ? "Copied" : "Copy full hash"}
+          aria-label={copied ? "Copied to clipboard" : `Copy ${hash}`}
         >
           {copied ? (
-            <span className="text-[10px] text-good font-mono font-medium">COPIED</span>
+            <span className="text-[11px] text-good font-medium">Copied</span>
           ) : (
-            <Copy className="w-3 h-3" />
+            <Copy aria-hidden="true" className="w-3 h-3" />
           )}
         </button>
       )}
+      <span className="sr-only" aria-live="polite">
+        {copied ? "Copied to clipboard" : ""}
+      </span>
     </span>
   );
 }

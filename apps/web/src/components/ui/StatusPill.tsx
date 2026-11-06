@@ -8,16 +8,16 @@ export function StatusPill({ status, className = "" }: StatusPillProps) {
 
   switch (status) {
     case "DETECTED":
-      style = "border-accent/40 bg-accent/10 text-accent";
+      style = "border-accent/30 bg-accent/10 text-accent";
       break;
     case "SIMULATED":
-      style = "border-[#388BFD]/40 bg-[#388BFD]/10 text-[#58A6FF]";
+      style = "border-info/30 bg-info/10 text-info";
       break;
     case "ARCHIVED":
-      style = "border-[#A371F7]/40 bg-[#A371F7]/10 text-[#BC8CFF]";
+      style = "border-arkiv/30 bg-arkiv/10 text-arkiv";
       break;
     case "REBATED":
-      style = "border-good/40 bg-good/10 text-good";
+      style = "border-good/30 bg-good/10 text-good";
       break;
     case "CLEAN":
       style = "border-border bg-surface text-muted";
@@ -26,7 +26,7 @@ export function StatusPill({ status, className = "" }: StatusPillProps) {
 
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium border rounded uppercase tracking-wider select-none ${style} ${className}`}
+      className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold border rounded-full uppercase tracking-wide whitespace-nowrap select-none ${style} ${className}`}
     >
       {status}
     </span>

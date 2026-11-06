@@ -318,17 +318,18 @@ export default function DemoPage() {
   const listItems = activeTab === "verified" ? VERIFIED_RUNS : simFeed;
 
   return (
-    <div className="flex-1 p-4 max-w-7xl mx-auto w-full flex flex-col space-y-3">
+    <div className="flex-1 w-full max-w-7xl mx-auto flex flex-col gap-3 lg:gap-4">
       {/* Mode Switcher Banner */}
-      <div className="border border-border bg-surface p-3 rounded flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="border border-border bg-surface shadow-card p-3 sm:p-4 rounded-card flex flex-col gap-3 text-sm">
+        <div className="flex flex-wrap items-center gap-1 p-1 rounded-3xl sm:rounded-full bg-surface-2 border border-border self-start">
           <button
             type="button"
             onClick={() => setActiveTab("verified")}
-            className={`px-3 py-1.5 rounded font-bold transition-colors ${
+            aria-pressed={activeTab === "verified"}
+            className={`px-4 py-2 rounded-full font-medium text-left transition-colors ${
               activeTab === "verified"
-                ? "bg-good text-bg"
-                : "border border-border bg-bg text-muted hover:text-text"
+                ? "bg-ink text-on-ink"
+                : "text-muted hover:text-text hover:bg-surface"
             }`}
           >
             1. Replay Verified On-Chain Runs (Real Data)
@@ -336,16 +337,17 @@ export default function DemoPage() {
           <button
             type="button"
             onClick={() => setActiveTab("simulated")}
-            className={`px-3 py-1.5 rounded font-bold transition-colors ${
+            aria-pressed={activeTab === "simulated"}
+            className={`px-4 py-2 rounded-full font-medium text-left transition-colors ${
               activeTab === "simulated"
-                ? "bg-accent text-bg"
-                : "border border-border bg-bg text-muted hover:text-text"
+                ? "bg-ink text-on-ink"
+                : "text-muted hover:text-text hover:bg-surface"
             }`}
           >
             2. Browser Simulation Sandbox [DEMO]
           </button>
         </div>
-        <div className="text-[11px] text-muted">
+        <div className="text-xs text-muted">
           {activeTab === "verified" ? (
             <span className="text-good">
               Every tx hash, Arkiv $key, and Arc settlement below is live on Base Sepolia, Arkiv Rabdi, and Arc Testnet.
@@ -359,24 +361,24 @@ export default function DemoPage() {
       </div>
 
       {/* Top Protocol Status Bar */}
-      <div className="border border-border bg-surface px-4 py-2.5 rounded flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs font-mono">
+      <div className="border border-border bg-surface shadow-card px-4 py-3 sm:px-5 rounded-card flex flex-col lg:flex-row lg:items-center justify-between gap-3 text-xs">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1.5 text-good font-semibold">
-            <span className="w-2 h-2 rounded-full bg-good animate-pulse"></span>
+            <span aria-hidden="true" className="w-2 h-2 rounded-full bg-good animate-pulse"></span>
             RADAR ACTIVE
           </div>
-          <span className="text-border">|</span>
+          <span aria-hidden="true" className="hidden sm:inline text-border">|</span>
           <span className="text-muted">
             TARGET: <span className="text-text font-bold">Base Sepolia (Hook v1 & v2)</span>
           </span>
-          <span className="text-border">|</span>
+          <span aria-hidden="true" className="hidden sm:inline text-border">|</span>
           <span className="text-muted">
             SETTLEMENT: <span className="text-text font-bold">Arc Testnet (RebateVault v2)</span>
           </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 border border-border rounded bg-bg">
+          <div className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-full bg-surface-2">
             <span className="text-muted">VAULT RESERVE (ARC V2):</span>
             <span className="text-text font-bold tabular-nums">${liveVaultUSDC} USDC</span>
           </div>
@@ -386,23 +388,23 @@ export default function DemoPage() {
               onClick={handleReplayVerifiedRun}
               disabled={isReplaying}
               type="button"
-              className="px-3.5 py-1.5 bg-good hover:opacity-90 disabled:opacity-50 text-bg font-bold rounded flex items-center gap-1.5 transition-opacity"
+              className="px-4 py-2 bg-ink hover:bg-ink/85 disabled:opacity-50 text-on-ink font-medium rounded-full flex items-center gap-1.5 transition-colors"
             >
               {isReplaying ? (
                 <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <RefreshCw aria-hidden="true" className="w-3.5 h-3.5 animate-spin" />
                   <span>Replaying Stage {replayStage}/4…</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-3.5 h-3.5" />
+                  <Play aria-hidden="true" className="w-3.5 h-3.5" />
                   <span>Replay Verified Run</span>
                 </>
               )}
             </button>
           ) : (
             <>
-              <div className="flex items-center gap-2 px-3 py-1 border border-border rounded bg-bg">
+              <div className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-full bg-surface-2">
                 <span className="text-muted">LP USDC BALANCE (ARC):</span>
                 <DemoData>
                   <span className="text-good font-bold tabular-nums">${lpBalance.toFixed(2)} USDC</span>
@@ -412,16 +414,16 @@ export default function DemoPage() {
                 onClick={handleTriggerSandwich}
                 disabled={isSimulating}
                 type="button"
-                className="px-3.5 py-1.5 bg-accent hover:opacity-90 disabled:opacity-50 text-bg font-bold rounded flex items-center gap-1.5 transition-opacity"
+                className="px-4 py-2 border border-text text-text hover:bg-surface-2 disabled:opacity-50 font-medium rounded-full flex items-center gap-1.5 transition-colors"
               >
                 {isSimulating ? (
                   <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <RefreshCw aria-hidden="true" className="w-3.5 h-3.5 animate-spin" />
                     <span>Simulating Attack...</span>
                   </>
                 ) : (
                   <>
-                    <Zap className="w-3.5 h-3.5" />
+                    <Zap aria-hidden="true" className="w-3.5 h-3.5" />
                     <span>Trigger Simulated Sandwich [DEMO]</span>
                   </>
                 )}
@@ -432,44 +434,55 @@ export default function DemoPage() {
       </div>
 
       {/* Two-Column Bloomberg Terminal Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-[620px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 flex-1 min-h-[620px]">
         {/* LEFT COLUMN: Event Feed (7 Cols) */}
-        <div className="lg:col-span-7 border border-border rounded bg-surface flex flex-col overflow-hidden">
-          <div className="px-3 py-2 border-b border-border bg-[#15181E] flex items-center justify-between text-xs font-mono select-none">
-            <div className="flex items-center gap-2 font-semibold text-text uppercase tracking-wider">
-              <Layers className="w-3.5 h-3.5 text-accent" />
+        <div className="lg:col-span-7 ink rounded-card shadow-float flex flex-col overflow-hidden">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-3 text-sm select-none">
+            <div className="flex items-center gap-2 font-semibold text-text">
+              <Layers aria-hidden="true" className="w-3.5 h-3.5 text-accent" />
               <span>
                 {activeTab === "verified"
                   ? "Verified On-Chain Runs (Base Sepolia → Arkiv → Arc)"
                   : "Simulated Surveillance Stream [DEMO]"}
               </span>
             </div>
-            <span className="text-[11px] text-muted tabular-nums">{listItems.length} RUNS</span>
+            <span className="text-xs text-muted tabular-nums">{listItems.length} RUNS</span>
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-border font-mono text-xs">
             {listItems.map((item) => {
               const isSelected = selectedItem.id === item.id;
+              // Same selection as before; extracted so mouse and keyboard trigger identical behavior.
+              const select = () => {
+                if (activeTab === "verified") {
+                  setSelectedVerified(item);
+                  setReplayStage(4);
+                } else {
+                  setSelectedSimulated(item);
+                  setClaimedSuccess(item.status === "REBATED");
+                }
+              };
               return (
                 <div
                   key={item.id}
-                  onClick={() => {
-                    if (activeTab === "verified") {
-                      setSelectedVerified(item);
-                      setReplayStage(4);
-                    } else {
-                      setSelectedSimulated(item);
-                      setClaimedSuccess(item.status === "REBATED");
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isSelected}
+                  onClick={select}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      select();
                     }
                   }}
-                  className={`p-3.5 transition-colors cursor-pointer select-none space-y-2 ${
-                    isSelected ? "bg-[#181C22] border-l-2 border-accent" : "hover:bg-[#14161B]"
+                  className={`px-5 py-4 transition-colors cursor-pointer select-none space-y-2 focus-visible:outline-offset-[-2px] ${
+                    isSelected ? "bg-surface-2 ring-1 ring-inset ring-accent/60" : "hover:bg-surface-2"
                   }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="text-text font-bold">{item.label}</span>
-                      <span className="text-muted text-[11px] tabular-nums">({item.timestamp})</span>
+                      <span className="text-muted text-xs tabular-nums">({item.timestamp})</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {item.mode === "simulated" ? (
@@ -483,7 +496,7 @@ export default function DemoPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
                     <span>
                       Pool: <span className="text-text">{item.poolName}</span> · Beneficiary:{" "}
                       <span className="text-text">
@@ -500,16 +513,16 @@ export default function DemoPage() {
 
             {/* Step-by-step On-Chain Evidence Breakdown when in Verified Mode */}
             {activeTab === "verified" && selectedVerified.txHashes && (
-              <div className="p-4 bg-bg space-y-3">
-                <div className="text-[11px] font-semibold text-accent uppercase tracking-wider">
+              <div className="px-5 py-4 bg-surface space-y-3">
+                <div className="text-xs font-semibold text-accent uppercase tracking-wider">
                   On-Chain Transaction Sequence ({selectedVerified.label})
                 </div>
 
-                <div className="space-y-2 text-[11px]">
+                <div className="space-y-2 text-xs">
                   {selectedVerified.txHashes.map((tx, idx) => (
                     <div
                       key={`${tx}-${idx}`}
-                      className="p-2.5 border border-border rounded bg-surface flex flex-wrap items-center justify-between gap-2"
+                      className="px-3 py-2.5 rounded-xl bg-surface-2 flex flex-wrap items-center justify-between gap-2"
                     >
                       <span className={idx === 1 ? "text-accent font-semibold" : "text-muted"}>
                         {idx === 0
@@ -525,13 +538,13 @@ export default function DemoPage() {
                         className="text-text hover:text-accent inline-flex items-center gap-1"
                       >
                         {tx.slice(0, 12)}…{tx.slice(-6)}
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink aria-hidden="true" className="w-3 h-3" />
                       </a>
                     </div>
                   ))}
 
                   {selectedVerified.arcAttestTx && (
-                    <div className="p-2.5 border border-border rounded bg-surface flex flex-wrap items-center justify-between gap-2">
+                    <div className="px-3 py-2.5 rounded-xl bg-surface-2 flex flex-wrap items-center justify-between gap-2">
                       <span className="text-muted">
                         Arc SimulationRegistry.recordSimulation (beneficiary = {selectedVerified.beneficiary.slice(0, 8)}…)
                       </span>
@@ -542,13 +555,13 @@ export default function DemoPage() {
                         className="text-text hover:text-accent inline-flex items-center gap-1"
                       >
                         {selectedVerified.arcAttestTx.slice(0, 12)}…{selectedVerified.arcAttestTx.slice(-6)}
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink aria-hidden="true" className="w-3 h-3" />
                       </a>
                     </div>
                   )}
 
                   {selectedVerified.arcNotBeneficiaryRevertTx && (
-                    <div className="p-2.5 border border-danger/30 rounded bg-danger/5 flex flex-wrap items-center justify-between gap-2">
+                    <div className="px-3 py-2.5 rounded-xl border border-danger/30 bg-danger/5 flex flex-wrap items-center justify-between gap-2">
                       <span className="text-danger font-semibold">
                         Arc RebateVault v2 NotBeneficiary Revert Proof (Operator Rejected)
                       </span>
@@ -560,7 +573,7 @@ export default function DemoPage() {
                       >
                         {selectedVerified.arcNotBeneficiaryRevertTx.slice(0, 12)}…
                         {selectedVerified.arcNotBeneficiaryRevertTx.slice(-6)}
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink aria-hidden="true" className="w-3 h-3" />
                       </a>
                     </div>
                   )}
@@ -571,54 +584,54 @@ export default function DemoPage() {
         </div>
 
         {/* RIGHT COLUMN: Receipt Inspector (5 Cols) */}
-        <div className="lg:col-span-5 border border-border rounded bg-surface flex flex-col overflow-hidden">
-          <div className="px-3 py-2 border-b border-border bg-[#15181E] flex items-center justify-between text-xs font-mono select-none">
-            <div className="flex items-center gap-2 font-semibold text-text uppercase tracking-wider">
-              <ShieldCheck className="w-3.5 h-3.5 text-good" />
+        <div className="lg:col-span-5 border border-border rounded-card bg-surface shadow-card flex flex-col overflow-hidden">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between gap-3 text-sm select-none">
+            <div className="flex items-center gap-2 font-semibold text-text">
+              <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 text-good" />
               <span>Cryptographic Receipt Detail</span>
             </div>
             <StatusPill status={displayedStatus} />
           </div>
 
-          <div className="p-4 flex-1 overflow-y-auto space-y-4 font-mono text-xs">
+          <div className="p-5 flex-1 overflow-y-auto space-y-4 font-mono text-xs">
             {/* Extracted Value Banner */}
-            <div className="p-3.5 border border-border rounded bg-bg space-y-1">
-              <div className="text-[11px] text-muted uppercase flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-surface-2 space-y-1">
+              <div className="text-xs text-muted uppercase flex items-center justify-between">
                 <span>Detected Extracted Loss</span>
                 {selectedItem.mode === "simulated" ? (
                   <DemoData />
                 ) : (
-                  <span className="text-good text-[10px] font-semibold">VERIFIED ON-CHAIN</span>
+                  <span className="text-good text-xs font-semibold">VERIFIED ON-CHAIN</span>
                 )}
               </div>
               <div className="text-3xl font-bold text-danger tabular-nums">
                 ${animatedLoss !== null ? animatedLoss.toFixed(2) : selectedItem.extractedUSDC} USDC
               </div>
-              <div className="text-[11px] text-muted">
+              <div className="text-xs text-muted">
                 LP LVR Impact: <span className="text-danger font-semibold">{selectedItem.lpLvrDelta}</span>
               </div>
             </div>
 
             {/* Counterfactual Slippage Breakdown */}
-            <div className="p-3.5 border border-border rounded bg-bg space-y-2.5">
+            <div className="p-4 rounded-2xl bg-surface-2 space-y-2.5">
               <div className="text-xs font-semibold text-text uppercase tracking-wider">
                 Counterfactual Decomposition
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2 border border-border rounded bg-surface">
-                  <div className="text-muted text-[10px]">INJECTED MEV</div>
+                <div className="p-3 rounded-xl bg-surface">
+                  <div className="text-muted text-xs">INJECTED MEV</div>
                   <div className="text-accent font-bold mt-0.5 tabular-nums">
                     +{selectedItem.injectedSlippageBps} bps
                   </div>
                 </div>
-                <div className="p-2 border border-border rounded bg-surface">
-                  <div className="text-muted text-[10px]">NATURAL SLIPPAGE</div>
+                <div className="p-3 rounded-xl bg-surface">
+                  <div className="text-muted text-xs">NATURAL SLIPPAGE</div>
                   <div className="text-good font-bold mt-0.5 tabular-nums">
                     {selectedItem.legitSlippageBps} bps
                   </div>
                 </div>
               </div>
-              <div className="text-[11px] text-muted leading-relaxed">
+              <div className="text-xs text-muted leading-relaxed">
                 <span className="text-accent font-bold">{selectedItem.injectedSlippageBps} bps</span> of the{" "}
                 {totalSlippage} bps realized slippage was frontrun price distortion.
               </div>
@@ -627,21 +640,21 @@ export default function DemoPage() {
             {/* Cryptographic Identifiers */}
             <div className="space-y-2.5 pt-1 border-t border-border">
               <div>
-                <div className="text-[10px] text-muted uppercase">Canonical Receipt Hash</div>
+                <div className="text-xs text-muted uppercase">Canonical Receipt Hash</div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <HashDisplay hash={selectedItem.receiptHash} truncate={true} prefixLength={10} suffixLength={8} />
                   <Link
                     href={`/receipt/${selectedItem.receiptHash}`}
-                    className="text-accent hover:underline inline-flex items-center gap-1 text-[11px]"
+                    className="text-accent hover:underline inline-flex items-center gap-1 text-xs"
                   >
                     <span>Open Live Receipt Page</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink aria-hidden="true" className="w-3 h-3" />
                   </Link>
                 </div>
               </div>
 
               <div>
-                <div className="text-[10px] text-muted uppercase">Arkiv Rabdi Entity Key ($key)</div>
+                <div className="text-xs text-muted uppercase">Arkiv Rabdi Entity Key ($key)</div>
                 {selectedItem.arkivEntityKey ? (
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <HashDisplay
@@ -654,25 +667,25 @@ export default function DemoPage() {
                       href={`https://rabdi.explorer.arkiv.network/entity/${selectedItem.arkivEntityKey}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-accent hover:underline flex items-center gap-1 text-[11px]"
+                      className="text-accent hover:underline flex items-center gap-1 text-xs"
                     >
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink aria-hidden="true" className="w-3 h-3" />
                       <span>Explorer</span>
                     </a>
                   </div>
                 ) : (
-                  <span className="text-muted text-[11px]">Unpublished in browser sandbox</span>
+                  <span className="text-muted text-xs">Unpublished in browser sandbox</span>
                 )}
               </div>
 
               <div>
-                <div className="text-[10px] text-muted uppercase">Attested Beneficiary (Wallet)</div>
+                <div className="text-xs text-muted uppercase">Attested Beneficiary (Wallet)</div>
                 <HashDisplay hash={selectedItem.beneficiary} truncate={true} prefixLength={10} suffixLength={8} />
               </div>
 
               {selectedItem.arcClaimTx && (
                 <div>
-                  <div className="text-[10px] text-muted uppercase">Arc USDC Claim Transaction</div>
+                  <div className="text-xs text-muted uppercase">Arc USDC Claim Transaction</div>
                   <div className="flex items-center gap-1.5 text-good mt-0.5">
                     <a
                       href={`https://explorer.testnet.arc.io/tx/${selectedItem.arcClaimTx}`}
@@ -681,16 +694,16 @@ export default function DemoPage() {
                       className="hover:underline inline-flex items-center gap-1"
                     >
                       <HashDisplay hash={selectedItem.arcClaimTx} truncate={true} />
-                      <ArrowUpRight className="w-3 h-3" />
+                      <ArrowUpRight aria-hidden="true" className="w-3 h-3" />
                     </a>
                   </div>
                 </div>
               )}
 
               <div>
-                <div className="text-[10px] text-muted uppercase">Internal App URI Reference</div>
-                <div className="text-muted text-[11px] flex items-center gap-1 mt-0.5">
-                  <Database className="w-3 h-3" />
+                <div className="text-xs text-muted uppercase">Internal App URI Reference</div>
+                <div className="text-muted text-xs flex items-center gap-1 mt-0.5">
+                  <Database aria-hidden="true" className="w-3 h-3" />
                   <span className="truncate">{selectedItem.arkivURI}</span>
                 </div>
               </div>
@@ -700,19 +713,19 @@ export default function DemoPage() {
             <div className="pt-2 border-t border-border">
               {activeTab === "verified" ? (
                 selectedItem.status === "REBATED" ? (
-                  <div className="p-3.5 border border-good/40 bg-good/10 rounded space-y-2 text-good">
+                  <div className="p-3.5 border border-good/30 bg-good/10 rounded-2xl space-y-2 text-good">
                     <div className="font-bold flex items-center gap-2">
-                      <Check className="w-4 h-4" />
+                      <Check aria-hidden="true" className="w-4 h-4" />
                       <span>Verified On-Chain Rebate Claimed (${selectedItem.extractedUSDC} USDC)</span>
                     </div>
-                    <div className="text-[11px] text-muted">
+                    <div className="text-xs text-muted">
                       Paid by Arc RebateVault to beneficiary{" "}
                       <span className="text-text">{selectedItem.beneficiary.slice(0, 10)}…</span> and sealed on Arkiv (
                       <a
                         href={`https://rabdi.explorer.arkiv.network/entity/${selectedItem.arkivClaimKey}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-[#BC8CFF] hover:underline"
+                        className="text-arkiv hover:underline"
                       >
                         LPClaim $key {selectedItem.arkivClaimKey?.slice(0, 8)}…
                       </a>
@@ -722,21 +735,21 @@ export default function DemoPage() {
                 ) : (
                   <Link
                     href={`/receipt/${selectedItem.receiptHash}`}
-                    className="w-full py-2.5 bg-good hover:opacity-90 text-bg font-bold rounded flex items-center justify-center gap-2 transition-opacity"
+                    className="w-full py-3 bg-ink hover:bg-ink/85 text-on-ink font-sans text-sm font-medium rounded-full flex items-center justify-center gap-2 transition-colors"
                   >
-                    <ShieldCheck className="w-4 h-4" />
+                    <ShieldCheck aria-hidden="true" className="w-4 h-4" />
                     <span>Open Live Receipt & Claim ${selectedItem.extractedUSDC} USDC on Arc v2</span>
                   </Link>
                 )
               ) : selectedItem.status === "REBATED" || claimedSuccess ? (
-                <div className="p-3.5 border border-good/40 bg-good/10 rounded flex items-center gap-2.5 text-good">
-                  <Check className="w-5 h-5 flex-shrink-0" />
+                <div className="p-3.5 border border-good/30 bg-good/10 rounded-2xl flex items-center gap-2.5 text-good">
+                  <Check aria-hidden="true" className="w-5 h-5 flex-shrink-0" />
                   <div>
                     <div className="font-bold flex items-center gap-2">
                       <span>Simulated Rebate Claim Settled</span>
                       <DemoData />
                     </div>
-                    <div className="text-[10px] text-muted mt-0.5">
+                    <div className="text-xs text-muted mt-0.5">
                       Simulated payout: ${selectedItem.extractedUSDC} USDC credited to LP demo balance. (No live claim
                       transaction broadcast).
                     </div>
@@ -747,23 +760,23 @@ export default function DemoPage() {
                   onClick={handleClaimRebate}
                   disabled={isClaiming}
                   type="button"
-                  className="w-full py-2.5 bg-good hover:opacity-90 disabled:opacity-50 text-bg font-bold rounded flex items-center justify-center gap-2 transition-opacity"
+                  className="w-full py-3 bg-ink hover:bg-ink/85 disabled:opacity-50 text-on-ink font-sans text-sm font-medium rounded-full flex items-center justify-center gap-2 transition-colors"
                 >
                   {isClaiming ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw aria-hidden="true" className="w-4 h-4 animate-spin" />
                       <span>Simulating Rebate Payout on Arc...</span>
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="w-4 h-4" />
+                      <ShieldCheck aria-hidden="true" className="w-4 h-4" />
                       <span>Simulate ${selectedItem.extractedUSDC} USDC Rebate Claim [DEMO]</span>
                     </>
                   )}
                 </button>
               ) : (
-                <div className="p-3 border border-border rounded bg-bg text-center text-muted text-[11px] flex items-center justify-center gap-2">
-                  <RefreshCw className="w-3 h-3 animate-spin text-accent" />
+                <div className="p-3 rounded-2xl bg-surface-2 text-center text-muted text-xs flex items-center justify-center gap-2">
+                  <RefreshCw aria-hidden="true" className="w-3 h-3 animate-spin text-accent" />
                   <span>Pipeline in progress: {selectedItem.status}...</span>
                 </div>
               )}

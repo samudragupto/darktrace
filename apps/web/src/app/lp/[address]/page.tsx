@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HashDisplay } from "@/components/ui/HashDisplay";
+import { AddressAvatar } from "@/components/ui/AddressAvatar";
 import { ArkivSource } from "@/components/arkiv/ArkivSource";
 import { ReceiptsTable } from "@/components/arkiv/ReceiptsTable";
 import { fromArkiv, sumUSDC, toView, writerAddress } from "@/lib/arkiv";
@@ -40,37 +41,40 @@ export default async function LPPage({ params }: LPPageProps) {
   const totalRebated = sumUSDC(lpReceipts.filter((r) => r.status === "REBATED"));
 
   return (
-    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+    <div className="flex-1 w-full max-w-7xl mx-auto flex flex-col gap-3 lg:gap-4">
       <div>
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-mono text-muted hover:text-text transition-colors"
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm text-muted shadow-card hover:text-text transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
+          <ArrowLeft aria-hidden="true" className="w-4 h-4" />
           Back to Surveillance Matrix
         </Link>
       </div>
 
       {/* LP Header */}
-      <div className="border border-border bg-surface p-6 rounded space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="text-xs font-mono text-accent uppercase tracking-wider flex items-center gap-1.5">
-              <Wallet className="w-4 h-4 text-good" />
-              Liquidity Provider Restitution Account
-            </div>
-            <h1 className="text-xl font-bold font-mono text-text mt-1">
+      <div className="border border-border bg-surface shadow-card p-5 sm:p-7 rounded-card space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div className="flex items-start gap-4 min-w-0">
+            <AddressAvatar address={params.address} size={56} className="mt-0.5" />
+            <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
               LP Forensics & Restitution
             </h1>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-xs font-mono text-muted">LP Address:</span>
-              <HashDisplay hash={params.address} truncate={false} className="text-xs" />
+            <p className="mt-1.5 text-sm text-muted flex items-center gap-1.5">
+              <Wallet aria-hidden="true" className="w-4 h-4 text-good" />
+              Liquidity Provider Restitution Account
+            </p>
+              <div className="mt-3 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-surface-2 border border-border pl-3 pr-2 py-1.5">
+                <span className="text-xs text-muted">LP Address:</span>
+                <HashDisplay hash={params.address} truncate={false} className="text-xs" />
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
               href="/demo"
-              className="px-3 py-1.5 bg-accent text-bg font-mono text-xs font-semibold rounded hover:opacity-90 transition-opacity"
+              className="px-5 py-2.5 bg-ink text-on-ink text-sm font-medium rounded-full hover:bg-ink/85 transition-colors whitespace-nowrap"
             >
               Open Claim Portal
             </Link>
@@ -78,37 +82,37 @@ export default async function LPPage({ params }: LPPageProps) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-border text-xs font-mono">
-          <div className="p-3 border border-border rounded bg-bg">
-            <div className="text-muted text-[11px]">Extractions Suffered</div>
-            <div className="text-text font-bold mt-1 tabular-nums">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-6 border-t border-border text-sm">
+          <div className="p-4 rounded-2xl bg-surface-2">
+            <div className="text-muted text-sm">Extractions Suffered</div>
+            <div className="text-text font-semibold mt-1.5 text-xl tabular-nums">
               {lpReceipts.length}
             </div>
           </div>
-          <div className="p-3 border border-border rounded bg-bg">
-            <div className="text-muted text-[11px]">Total Value Extracted</div>
-            <div className="text-danger font-bold mt-1 tabular-nums">
+          <div className="p-4 rounded-2xl bg-surface-2">
+            <div className="text-muted text-sm">Total Value Extracted</div>
+            <div className="text-danger font-semibold mt-1.5 text-xl tabular-nums">
               ${totalSuffered}
             </div>
           </div>
-          <div className="p-3 border border-border rounded bg-bg">
-            <div className="text-muted text-[11px]">Total Rebates Claimed</div>
-            <div className="text-good font-bold mt-1 tabular-nums">
+          <div className="p-4 rounded-2xl bg-surface-2">
+            <div className="text-muted text-sm">Total Rebates Claimed</div>
+            <div className="text-good font-semibold mt-1.5 text-xl tabular-nums">
               ${totalRebated} USDC
             </div>
           </div>
-          <div className="p-3 border border-border rounded bg-bg">
-            <div className="text-muted text-[11px]">Settlement Network</div>
-            <div className="text-accent font-bold mt-1">Arc Testnet (Circle)</div>
+          <div className="p-4 rounded-2xl bg-surface-2">
+            <div className="text-muted text-sm">Settlement Network</div>
+            <div className="text-accent font-semibold mt-1.5 text-base">Arc Testnet (Circle)</div>
           </div>
         </div>
       </div>
 
       {/* Extractions Suffered Table */}
-      <div className="space-y-3">
-        <div className="text-xs font-mono font-semibold text-text uppercase tracking-wider">
+      <div className="space-y-2.5">
+        <h2 className="px-1 text-base font-semibold tracking-tight text-text">
           Observed Extractions on this Account ({lpReceipts.length})
-        </div>
+        </h2>
 
         <ArkivSource
           ok={res.ok}
