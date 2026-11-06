@@ -5,13 +5,16 @@
 export function NetworkBadge() {
   return (
     <div
-      className="flex items-center gap-2 px-2.5 py-1 border border-border rounded bg-bg text-[11px] font-mono select-none"
+      className="flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 border border-border rounded-full bg-surface-2 text-xs select-none whitespace-nowrap"
       data-testid="network-badge"
+      title="Base Sepolia and Arc Testnet (testnets only)"
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-good"></span>
-      <span className="text-text tracking-wider uppercase">
+      <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-good"></span>
+      {/* Spec: always visible. Full label from sm up, compact label on phones. */}
+      <span className="text-text font-medium tracking-wide uppercase hidden sm:inline">
         BASE SEPOLIA · ARC TESTNET
       </span>
+      <span className="text-text font-medium tracking-wide uppercase sm:hidden">TESTNET</span>
     </div>
   );
 }

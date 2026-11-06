@@ -14,8 +14,8 @@ interface ArkivSourceProps {
 export function ArkivSource({ ok, queriedAt, query, count, writer, error }: ArkivSourceProps) {
   if (!ok) {
     return (
-      <div className="flex items-start gap-2 px-3 py-2 border border-danger/40 bg-danger/10 rounded text-[11px] font-mono text-danger">
-        <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+      <div role="alert" className="flex items-start gap-2 px-4 py-2.5 border border-danger/30 bg-danger/5 rounded-2xl text-xs text-danger">
+        <AlertTriangle aria-hidden="true" className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <span>
           Arkiv Rabdi read failed ({error}). No fallback data is shown.
         </span>
@@ -23,12 +23,12 @@ export function ArkivSource({ ok, queriedAt, query, count, writer, error }: Arki
     );
   }
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 border border-[#A371F7]/40 bg-[#A371F7]/10 rounded text-[11px] font-mono text-[#BC8CFF]">
-      <span className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider">
-        <Database className="w-3.5 h-3.5" />
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 border border-arkiv/20 bg-arkiv/5 rounded-2xl text-xs text-arkiv">
+      <span className="inline-flex items-center gap-1.5 font-semibold">
+        <Database aria-hidden="true" className="w-3.5 h-3.5" />
         Live from Arkiv Rabdi · chain 7794095
       </span>
-      <span className="text-muted break-all">
+      <span className="text-muted font-mono break-all">
         {query}
         {typeof count === "number" ? ` → ${count} entit${count === 1 ? "y" : "ies"}` : ""}
       </span>

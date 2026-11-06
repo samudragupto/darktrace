@@ -33,32 +33,35 @@ export function Footer() {
   ];
 
   return (
-    <footer className="w-full border-t border-border bg-surface px-4 py-2 text-[11px] font-mono text-muted flex flex-col sm:flex-row items-center justify-between gap-2">
+    <footer className="w-full bg-surface border border-border rounded-card shadow-card px-4 py-4 sm:px-5 text-xs text-muted flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="text-text font-semibold">DARKTRACE FORENSICS</span>
-        <span>•</span>
-        <span>ETHGlobal Mumbai 2026</span>
-        <span>•</span>
+        <span aria-hidden="true">•</span>
         <span>Uniswap v4 + Arc + Arkiv</span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-        {contracts.map((c) => (
-          <a
-            key={c.name}
-            href={c.explorerUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-text transition-colors flex items-center gap-1"
-          >
-            <span className="text-muted">{c.name}:</span>
-            <span className="text-text underline decoration-border hover:decoration-accent">
-              {c.address.slice(0, 6)}...{c.address.slice(-4)}
-            </span>
-          </a>
-        ))}
-      </div>
+      <nav aria-label="Deployed contracts">
+        <ul className="flex flex-wrap gap-2">
+          {contracts.map((c) => (
+            <li key={c.name}>
+              <a
+                href={c.explorerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1.5 hover:border-muted/50 hover:text-text transition-colors"
+              >
+                <span>{c.name}</span>
+                <span className="font-mono text-text">
+                  {c.address.slice(0, 6)}...{c.address.slice(-4)}
+                </span>
+                <span className="sr-only">
+                  ({c.network}, full address {c.address}, opens in a new tab)
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </footer>
   );
 }
-

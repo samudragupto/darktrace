@@ -8,12 +8,12 @@ import { arcTestnet } from "@/config/chains";
 import { HashDisplay } from "@/components/ui/HashDisplay";
 import { AlertTriangle, Check, ExternalLink, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
 
-const REGISTRY_V2 = (process.env.NEXT_PUBLIC_SIMULATION_REGISTRY ||
+export const REGISTRY_V2 = (process.env.NEXT_PUBLIC_SIMULATION_REGISTRY ||
   "0xd501D47b246438A18C8a0BFFCF10338CfBB661a2") as Hex;
-const VAULT_V2 = (process.env.NEXT_PUBLIC_REBATE_VAULT ||
+export const VAULT_V2 = (process.env.NEXT_PUBLIC_REBATE_VAULT ||
   "0x238dE56E52A3F6C6708952052e6a20E5102b4d5b") as Hex;
 
-const REGISTRY_ABI = [
+export const REGISTRY_ABI = [
   {
     type: "function",
     name: "getAttestation",
@@ -34,7 +34,7 @@ const REGISTRY_ABI = [
   },
 ] as const;
 
-const VAULT_ABI = [
+export const VAULT_ABI = [
   {
     type: "function",
     name: "claimedReceipts",
@@ -197,14 +197,14 @@ export function ClaimRebatePanel({
   };
 
   return (
-    <div className="border border-border bg-[#15191E] p-5 rounded space-y-4 text-xs font-mono">
+    <section id="settlement" className="scroll-mt-4 border border-border bg-surface rounded-card shadow-card p-5 sm:p-6 space-y-5 text-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="text-good font-bold uppercase flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-good" />
+          <h2 className="text-base font-semibold tracking-tight text-text flex items-center gap-2">
+            <ShieldCheck aria-hidden="true" className="w-4 h-4 text-good" />
             Settlement · Arc Testnet RebateVault v2
-          </div>
-          <div className="text-muted text-[11px] mt-1 leading-relaxed">
+          </h2>
+          <div className="text-muted text-sm mt-1.5 leading-relaxed max-w-[70ch]">
             {isClaimed
               ? `Rebate of $${extractedUSDC} USDC settled on Arc Testnet and sealed on Arkiv (darktrace.lp_claims).`
               : isSynthetic
@@ -216,16 +216,16 @@ export function ClaimRebatePanel({
         </div>
 
         {isClaimed ? (
-          <div className="px-3 py-1.5 border border-good/40 bg-good/10 text-good rounded font-semibold text-[11px] inline-flex items-center gap-1.5 self-start sm:self-center">
-            <Check className="w-3.5 h-3.5" />
+          <div className="px-3 py-1.5 border border-good/30 bg-good/10 text-good rounded-full font-semibold text-xs inline-flex items-center gap-1.5 self-start sm:self-center">
+            <Check aria-hidden="true" className="w-3.5 h-3.5" />
             CLAIMED (REBATED)
           </div>
         ) : null}
       </div>
 
       {/* Live Arc v2 On-Chain Verification Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-border text-[11px]">
-        <div className="p-2.5 border border-border rounded bg-bg">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+        <div className="p-3.5 rounded-2xl bg-surface-2">
           <div className="text-muted">Arc v2 Attestation</div>
           <div className="mt-1 font-semibold text-text">
             {attestationError ? (
@@ -240,7 +240,7 @@ export function ClaimRebatePanel({
           </div>
         </div>
 
-        <div className="p-2.5 border border-border rounded bg-bg">
+        <div className="p-3.5 rounded-2xl bg-surface-2">
           <div className="text-muted">Authorized Beneficiary (v2)</div>
           <div className="mt-1 text-text flex items-center gap-1">
             {effectiveBeneficiary ? (
@@ -251,7 +251,7 @@ export function ClaimRebatePanel({
           </div>
         </div>
 
-        <div className="p-2.5 border border-border rounded bg-bg">
+        <div className="p-3.5 rounded-2xl bg-surface-2">
           <div className="text-muted">Vault Nullifier Status</div>
           <div className="mt-1 font-semibold">
             {isClaimed ? (
@@ -265,9 +265,9 @@ export function ClaimRebatePanel({
 
       {/* Claim Tx / LPClaim Link if Claimed */}
       {txHash && (
-        <div className="p-3 border border-good/30 bg-good/5 rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]">
+        <div className="p-3.5 border border-good/30 bg-good/5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2 text-good">
-            <Check className="w-3.5 h-3.5" />
+            <Check aria-hidden="true" className="w-3.5 h-3.5" />
             <span>Arc Claim Transaction:</span>
             <a
               href={`https://explorer.testnet.arc.io/tx/${txHash}`}
@@ -276,7 +276,7 @@ export function ClaimRebatePanel({
               className="underline inline-flex items-center gap-1 font-semibold"
             >
               {txHash.slice(0, 12)}…{txHash.slice(-8)}
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink aria-hidden="true" className="w-3 h-3" />
             </a>
           </div>
           {arkivEntityKey && (
@@ -284,10 +284,10 @@ export function ClaimRebatePanel({
               href={`https://rabdi.explorer.arkiv.network/entity/${arkivEntityKey}`}
               target="_blank"
               rel="noreferrer"
-              className="text-[#BC8CFF] hover:underline inline-flex items-center gap-1"
+              className="text-arkiv hover:underline inline-flex items-center gap-1"
             >
               Arkiv LPClaim $key: {arkivEntityKey.slice(0, 10)}…
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink aria-hidden="true" className="w-3 h-3" />
             </a>
           )}
         </div>
@@ -297,13 +297,13 @@ export function ClaimRebatePanel({
       {!isClaimed && !isSynthetic && (
         <div className="space-y-3 pt-1">
           {isConnected && address && !isBeneficiary && (
-            <div className="p-3 border border-danger/40 bg-danger/10 rounded text-danger flex items-start gap-2 text-[11px]">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div className="p-3.5 border border-danger/30 bg-danger/5 rounded-2xl text-danger flex items-start gap-2 text-xs">
+              <AlertTriangle aria-hidden="true" className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <div>
-                <div className="font-bold uppercase">NotBeneficiary Guard Active</div>
+                <div className="font-semibold">NotBeneficiary Guard Active</div>
                 <div className="text-muted mt-0.5">
-                  Connected wallet <span className="text-text">{address}</span> is not the attested beneficiary (
-                  <span className="text-text">{effectiveBeneficiary}</span>).{" "}
+                  Connected wallet <span className="text-text font-mono break-all">{address}</span> is not the attested beneficiary (
+                  <span className="text-text font-mono break-all">{effectiveBeneficiary}</span>).{" "}
                   <code className="text-danger">RebateVault.claimRebate</code> will revert with{" "}
                   <code className="text-danger">NotBeneficiary</code> on-chain. Connect the beneficiary wallet to
                   claim.
@@ -313,19 +313,49 @@ export function ClaimRebatePanel({
           )}
 
           {errorMsg && (
-            <div className="p-3 border border-danger/40 bg-danger/10 rounded text-danger text-[11px] break-words">
+            <div className="p-3.5 border border-danger/30 bg-danger/5 rounded-2xl text-danger text-xs break-words">
               {errorMsg}
             </div>
           )}
+
+          {/* Wallet-style review: what the claim transaction will send (display only) */}
+          <div className="rounded-2xl border border-border bg-surface-2 p-4 space-y-3">
+            <div className="text-center">
+              <div className="text-xs text-muted">You receive</div>
+              <div className="mt-1 text-3xl font-semibold tabular-nums text-good">${attestedFormatted} USDC</div>
+            </div>
+            <dl className="divide-y divide-border text-xs">
+              <div className="flex items-center justify-between gap-3 py-2">
+                <dt className="text-muted">Network</dt>
+                <dd className="text-text">Arc Testnet ({arcTestnet.id})</dd>
+              </div>
+              <div className="flex items-center justify-between gap-3 py-2">
+                <dt className="text-muted">Recipient</dt>
+                <dd className={`text-text text-right break-all ${isConnected && address ? "font-mono" : ""}`}>
+                  {isConnected && address ? `${address.slice(0, 6)}…${address.slice(-4)} (connected wallet)` : "Connect the beneficiary wallet"}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-3 py-2">
+                <dt className="text-muted">Contract</dt>
+                <dd className="text-text font-mono">RebateVault v2 · {VAULT_V2.slice(0, 6)}…{VAULT_V2.slice(-4)}</dd>
+              </div>
+              <div className="flex items-center justify-between gap-3 py-2">
+                <dt className="text-muted">Who can claim</dt>
+                <dd className="text-text font-mono">
+                  {effectiveBeneficiary ? `${effectiveBeneficiary.slice(0, 6)}…${effectiveBeneficiary.slice(-4)} only` : "—"}
+                </dd>
+              </div>
+            </dl>
+          </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {!isConnected ? (
               <button
                 type="button"
                 onClick={() => openConnectModal?.()}
-                className="px-4 py-2 bg-good text-bg rounded font-bold text-xs hover:opacity-90 transition-opacity inline-flex items-center gap-2"
+                className="px-5 py-2.5 bg-ink text-on-ink rounded-full font-medium text-sm hover:bg-ink/85 transition-colors inline-flex items-center gap-2"
               >
-                <Wallet className="w-3.5 h-3.5" />
+                <Wallet aria-hidden="true" className="w-3.5 h-3.5" />
                 Connect Beneficiary Wallet to Claim
               </button>
             ) : chainId !== arcTestnet.id ? (
@@ -333,7 +363,7 @@ export function ClaimRebatePanel({
                 type="button"
                 disabled={isSwitching}
                 onClick={() => switchChainAsync({ chainId: arcTestnet.id })}
-                className="px-4 py-2 bg-accent text-bg rounded font-bold text-xs hover:opacity-90 disabled:opacity-50 transition-opacity inline-flex items-center gap-2"
+                className="px-5 py-2.5 border border-text text-text rounded-full font-medium text-sm hover:bg-surface-2 disabled:opacity-50 transition-colors inline-flex items-center gap-2"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSwitching ? "animate-spin" : ""}`} />
                 Switch Wallet to Arc Testnet (5042002)
@@ -343,7 +373,7 @@ export function ClaimRebatePanel({
                 type="button"
                 disabled={isSubmitting || !isAttested || !isBeneficiary}
                 onClick={handleClaim}
-                className="px-4 py-2 bg-good text-bg rounded font-bold text-xs hover:opacity-90 disabled:opacity-40 transition-opacity inline-flex items-center gap-2"
+                className="px-5 py-2.5 bg-ink text-on-ink rounded-full font-medium text-sm hover:bg-ink/85 disabled:opacity-40 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
               >
                 {isSubmitting ? (
                   <>
@@ -359,12 +389,12 @@ export function ClaimRebatePanel({
               </button>
             )}
 
-            <span className="text-[11px] text-muted">
-              Vault v2: <code className="text-text">{VAULT_V2.slice(0, 10)}…</code>
+            <span className="text-xs text-muted">
+              Vault v2: <code className="prose-code">{VAULT_V2.slice(0, 10)}…</code>
             </span>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
