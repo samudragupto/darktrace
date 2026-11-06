@@ -201,7 +201,8 @@ export default function DemoPage() {
     }, 1200);
   };
 
-  const netToxicSlippage = selectedItem.injectedSlippageBps - selectedItem.legitSlippageBps;
+  // injected = extra slippage caused by the frontrun; legit = slippage the victim would have had anyway.
+  const totalSlippage = selectedItem.injectedSlippageBps + selectedItem.legitSlippageBps;
 
   return (
     <div className="flex-1 p-4 max-w-7xl mx-auto w-full flex flex-col space-y-3">
@@ -355,7 +356,7 @@ export default function DemoPage() {
                 </div>
               </div>
               <div className="text-[11px] text-muted leading-relaxed">
-                <span className="text-accent font-bold">{netToxicSlippage} bps</span> of realized slippage was toxic frontrun injection, not legitimate market price discovery.
+                <span className="text-accent font-bold">{selectedItem.injectedSlippageBps} bps</span> of the {totalSlippage} bps realized slippage was toxic frontrun injection, not legitimate market price discovery.
               </div>
             </div>
 
