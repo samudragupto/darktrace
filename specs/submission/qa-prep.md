@@ -48,11 +48,38 @@ Most Uniswap v4 MEV hooks try to prevent extraction inside `beforeSwap` by addin
 ---
 
 ### Q8: "The SimulationRegistry writer is a single EOA — why trust it?"
-In this hackathon build, you do not have to trust the writer blindly because:
-1. Every `SimulationRegistry` attestation references an immutable Arkiv `ExtractionReceipt` containing the exact Base Sepolia transaction hashes, pre-attack reserves, and deterministic `keccak256` simulation hash. Anyone can re-run `computeCounterfactual` against those inputs and verify the digest matches.
-2. `SimulationRegistry` v2 Escrow (`0x31d5…0E77`) includes an on-chain **dispute window (`flagDispute`)** allowing authorized challengers to freeze any contested attestation before `claimableAt` expires.
+Honest answer: today you do trust it. One owner key (`0xb491…aDA5`) attests, and the same key owns the vault and can `emergencyWithdraw`. What you get instead of blind trust:
+1. **Verifiability.** Every attestation points to an Arkiv `ExtractionReceipt` with the exact Base Sepolia tx hashes. The loss is rebuilt from the PoolManager's own `Swap` events, so anyone can recompute it (`pnpm --filter @darktrace/indexer process-tx <tx> --dry-run`) and compare with the attested amount.
+2. **Containment.** In the live vault (v2, `0x238d…4d5b`) only the attested victim wallet can claim, so a stolen receipt hash is worthless.
+3. **Next step, already written.** The escrow registry/vault (`0x31d5…0E77` / `0x0897…E104`) adds a dispute window and claim expiry. It is deployed and tested but **not live**: it holds 0 USDC and the app does not use it. Long term: optimistic or ZK proofs of the loss.
 
 ---
 
 ### Q9: "What breaks first at scale?"
 Two things break first at high throughput. First, our hook tracks one active `victimCandidate` and `frontrunTickDelta` per pool per block; if multiple independent sandwiches interleave inside the same pool during the same block, later swaps overwrite the earlier candidate slot. Second, our counterfactual engine uses single-range constant-product pricing (`x * y = k`), which is exact within one active v4 tick interval but drifts when a whale swap crosses multiple initialized tick boundaries.
+
+---
+
+## Part 3 — Hardest Questions (rehearse these out loud)
+
+### Q10: "MEVictim Rebate did this at ETHGlobal NY 2023. What's new?"
+They proved victimhood with Axiom ZK proofs and minted a soulbound NFT, but the swap-fee rebates were never built. DarkTrace **paid USDC twice** (3.57 and 3.54 on Arc), the second time to the victim's own wallet after the operator's claim **reverted on-chain**, and every step is a public tx or Arkiv entity. Their proof model is stronger than our single attester; that is our roadmap, not our claim.
+
+### Q11: "Can't a searcher just backrun from a second contract?"
+Against hook v2 alone, yes: v2 requires the same actor on both legs to avoid false positives (threat model §3). The indexer's **linked-origin scanner** closes it: it links frontrun and backrun by the EOA that signed them. `./scripts/fork-proof-v2.sh` shows it on the real hook v2: the hook stays silent, the scanner flags the sandwich, and the receipt names the victim's wallet (`detection=linked-origin`). Not caught: searchers using different EOAs *and* contracts, which look like two independent traders.
+
+### Q12: "Who pays for this?"
+Testnet: the operator funded the vault. The design routes slashed `SearcherRegistry` bonds and a share of hook fees into it; neither is built yet, and no searcher has posted a bond (the UI reads `0.0000 ETH` live). meva funds victims from a bot tax; that is the model we would converge on.
+
+### Q13: "Why not just prevent it? MEV Blocker and Angstrom exist."
+Prevention needs the user to switch RPC or venue. DarkTrace gives a pool a verifiable restitution guarantee for the flow that still gets sandwiched. It complements prevention; we don't claim to replace it.
+
+### Q14: "Were both wallets in run #2 yours?"
+Yes. The victim is a separate EOA (`0x524e…51Db`) that signed its own swap and its own claim, but its key is derived from the operator key. The contracts can't tell the difference; the point of the run is that only the attested beneficiary could claim, which the reverted operator claim proves.
+
+### Q15: "Is the live vault built in Arc Studio?"
+No. The Studio deployment (`0x5279…` / `0x6760…`) is our v1 schema and its deployer key can't be exported or used to transfer ownership, so the app settles on our Foundry deployment of the evolved design. Show the Studio project for the design and tests; don't claim it pays out.
+
+### Q16: "This is a lot of code in two days. How much is AI?"
+A lot, and it's disclosed per file in `AI_ATTRIBUTION.md`. What we can show is that it's verified: 36 contract tests, TypeScript tests from real chain data, two on-chain runs, and fork proofs anyone can rerun.
+
