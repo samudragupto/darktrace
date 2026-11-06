@@ -101,16 +101,18 @@ contract DarkTraceHookTest is Test {
             sqrtPriceLimitX96: 0
         });
 
-        // Pre-swap tick: 100
-        vm.prank(address(mockManager));
-        hook.beforeSwap(TRADER_CLEAN, testKey, params, "");
-
         // Normal market slippage: tick moves 100 -> 98 (delta = -2, below threshold 5)
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 98);
-
         vm.recordLogs();
-        vm.prank(address(mockManager));
-        hook.afterSwap(TRADER_CLEAN, testKey, params, toBalanceDelta(-1 ether, 1 ether), "");
+        mockManager.simulateSwap(
+            hook,
+            TRADER_CLEAN,
+            testKey,
+            params,
+            uint160(1 << 96),
+            98,
+            toBalanceDelta(-1 ether, 1 ether),
+            ""
+        );
 
         // Assert no ExtractionDetected events emitted and zero persistent storage written
         Vm.Log[] memory entries = vm.getRecordedLogs();
@@ -124,12 +126,16 @@ contract DarkTraceHookTest is Test {
             amountSpecified: -5 ether,
             sqrtPriceLimitX96: 0
         });
-
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, frontrunParams, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 80);
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, frontrunParams, toBalanceDelta(-5 ether, 5 ether), "");
+        mockManager.simulateSwap(
+            hook,
+            SEARCHER,
+            testKey,
+            frontrunParams,
+            uint160(1 << 96),
+            80,
+            toBalanceDelta(-5 ether, 5 ether),
+            ""
+        );
 
         // --- TX 2: Victim Swap (zeroForOne = true, sells 10 token0, tick 80 -> 76, delta = -4) ---
         IPoolManager.SwapParams memory victimParams = IPoolManager.SwapParams({
@@ -137,12 +143,16 @@ contract DarkTraceHookTest is Test {
             amountSpecified: -10 ether,
             sqrtPriceLimitX96: 0
         });
-
-        vm.prank(address(mockManager));
-        hook.beforeSwap(VICTIM, testKey, victimParams, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 76);
-        vm.prank(address(mockManager));
-        hook.afterSwap(VICTIM, testKey, victimParams, toBalanceDelta(-10 ether, 10 ether), "");
+        mockManager.simulateSwap(
+            hook,
+            VICTIM,
+            testKey,
+            victimParams,
+            uint160(1 << 96),
+            76,
+            toBalanceDelta(-10 ether, 10 ether),
+            ""
+        );
 
         // --- TX 3: Searcher Backrun (zeroForOne = false, sells 5 token1 for 5.2 token0, net +0.2 token0 > 0) ---
         IPoolManager.SwapParams memory backrunParams = IPoolManager.SwapParams({
@@ -151,11 +161,7 @@ contract DarkTraceHookTest is Test {
             sqrtPriceLimitX96: 0
         });
 
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, backrunParams, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 98);
-
-        vm.expectEmit(true, true, true, false);
+        vm.expectEmit(true, true, true, false, address(hook));
         emit ExtractionDetected(
             testPoolId,
             SEARCHER,
@@ -164,8 +170,16 @@ contract DarkTraceHookTest is Test {
             bytes32(0)
         );
 
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, backrunParams, toBalanceDelta(5.2 ether, -5 ether), "");
+        mockManager.simulateSwap(
+            hook,
+            SEARCHER,
+            testKey,
+            backrunParams,
+            uint160(1 << 96),
+            98,
+            toBalanceDelta(5.2 ether, -5 ether),
+            ""
+        );
     }
 
     function test_DefensiveFallback_OpposingSwapsAcrossDifferentBlocks_NoEvent() public {
@@ -175,22 +189,32 @@ contract DarkTraceHookTest is Test {
             amountSpecified: -5 ether,
             sqrtPriceLimitX96: 0
         });
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, params1, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 80);
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, params1, toBalanceDelta(-5 ether, 5 ether), "");
+        mockManager.simulateSwap(
+            hook,
+            SEARCHER,
+            testKey,
+            params1,
+            uint160(1 << 96),
+            80,
+            toBalanceDelta(-5 ether, 5 ether),
+            ""
+        );
 
         IPoolManager.SwapParams memory params2 = IPoolManager.SwapParams({
             zeroForOne: true,
             amountSpecified: -10 ether,
             sqrtPriceLimitX96: 0
         });
-        vm.prank(address(mockManager));
-        hook.beforeSwap(VICTIM, testKey, params2, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 76);
-        vm.prank(address(mockManager));
-        hook.afterSwap(VICTIM, testKey, params2, toBalanceDelta(-10 ether, 10 ether), "");
+        mockManager.simulateSwap(
+            hook,
+            VICTIM,
+            testKey,
+            params2,
+            uint160(1 << 96),
+            76,
+            toBalanceDelta(-10 ether, 10 ether),
+            ""
+        );
 
         // Backrun in next block (Block 101)
         vm.roll(101);
@@ -199,13 +223,18 @@ contract DarkTraceHookTest is Test {
             amountSpecified: -5 ether,
             sqrtPriceLimitX96: 0
         });
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, params3, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 98);
 
         vm.recordLogs();
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, params3, toBalanceDelta(5.2 ether, -5 ether), "");
+        mockManager.simulateSwap(
+            hook,
+            SEARCHER,
+            testKey,
+            params3,
+            uint160(1 << 96),
+            98,
+            toBalanceDelta(5.2 ether, -5 ether),
+            ""
+        );
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries.length, 0);
@@ -216,29 +245,16 @@ contract DarkTraceHookTest is Test {
     function test_FalsePositive_IndependentArbitrageurDoesNotTrigger() public {
         // Trader 1 (SEARCHER) pushes price down
         IPoolManager.SwapParams memory p1 = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, p1, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 80);
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, p1, toBalanceDelta(-5 ether, 5 ether), "");
+        mockManager.simulateSwap(hook, SEARCHER, testKey, p1, uint160(1 << 96), 80, toBalanceDelta(-5 ether, 5 ether), "");
 
         // Trader 2 (VICTIM) swaps in same direction
         IPoolManager.SwapParams memory p2 = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -10 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(VICTIM, testKey, p2, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 76);
-        vm.prank(address(mockManager));
-        hook.afterSwap(VICTIM, testKey, p2, toBalanceDelta(-10 ether, 10 ether), "");
+        mockManager.simulateSwap(hook, VICTIM, testKey, p2, uint160(1 << 96), 76, toBalanceDelta(-10 ether, 10 ether), "");
 
         // Trader 3 (ARBITRAGEUR != SEARCHER) swaps in opposite direction
         IPoolManager.SwapParams memory p3 = IPoolManager.SwapParams({zeroForOne: false, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(ARBITRAGEUR, testKey, p3, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 98);
-
         vm.recordLogs();
-        vm.prank(address(mockManager));
-        hook.afterSwap(ARBITRAGEUR, testKey, p3, toBalanceDelta(5.2 ether, -5 ether), "");
+        mockManager.simulateSwap(hook, ARBITRAGEUR, testKey, p3, uint160(1 << 96), 98, toBalanceDelta(5.2 ether, -5 ether), "");
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries.length, 0);
@@ -247,29 +263,16 @@ contract DarkTraceHookTest is Test {
     function test_FalsePositive_UnprofitableRoundTripDoesNotTrigger() public {
         // Searcher frontruns -5 ether token0
         IPoolManager.SwapParams memory p1 = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, p1, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 80);
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, p1, toBalanceDelta(-5 ether, 5 ether), "");
+        mockManager.simulateSwap(hook, SEARCHER, testKey, p1, uint160(1 << 96), 80, toBalanceDelta(-5 ether, 5 ether), "");
 
         // Victim swaps in same direction
         IPoolManager.SwapParams memory p2 = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -1 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(VICTIM, testKey, p2, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 79);
-        vm.prank(address(mockManager));
-        hook.afterSwap(VICTIM, testKey, p2, toBalanceDelta(-1 ether, 1 ether), "");
+        mockManager.simulateSwap(hook, VICTIM, testKey, p2, uint160(1 << 96), 79, toBalanceDelta(-1 ether, 1 ether), "");
 
         // Searcher reverses, receiving only +4.97 ether token0 (net -0.03 ether <= 0 after fees)
         IPoolManager.SwapParams memory p3 = IPoolManager.SwapParams({zeroForOne: false, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, p3, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 99);
-
         vm.recordLogs();
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, p3, toBalanceDelta(4.97 ether, -5 ether), "");
+        mockManager.simulateSwap(hook, SEARCHER, testKey, p3, uint160(1 << 96), 99, toBalanceDelta(4.97 ether, -5 ether), "");
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries.length, 0);
@@ -277,20 +280,11 @@ contract DarkTraceHookTest is Test {
 
     function test_FalsePositive_ImmediateSelfReversalWithoutVictimDoesNotTrigger() public {
         IPoolManager.SwapParams memory p1 = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, p1, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 80);
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, p1, toBalanceDelta(-5 ether, 5 ether), "");
+        mockManager.simulateSwap(hook, SEARCHER, testKey, p1, uint160(1 << 96), 80, toBalanceDelta(-5 ether, 5 ether), "");
 
         IPoolManager.SwapParams memory p2 = IPoolManager.SwapParams({zeroForOne: false, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, p2, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 100);
-
         vm.recordLogs();
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, p2, toBalanceDelta(5.1 ether, -5 ether), "");
+        mockManager.simulateSwap(hook, SEARCHER, testKey, p2, uint160(1 << 96), 100, toBalanceDelta(5.1 ether, -5 ether), "");
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries.length, 0);
@@ -302,29 +296,16 @@ contract DarkTraceHookTest is Test {
 
         // All 3 swaps enter via SHARED_ROUTER, but opt-in hookData attributes SEARCHER and VICTIM
         IPoolManager.SwapParams memory p1 = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SHARED_ROUTER, testKey, p1, searcherData);
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 80);
-        vm.prank(address(mockManager));
-        hook.afterSwap(SHARED_ROUTER, testKey, p1, toBalanceDelta(-5 ether, 5 ether), searcherData);
+        mockManager.simulateSwap(hook, SHARED_ROUTER, testKey, p1, uint160(1 << 96), 80, toBalanceDelta(-5 ether, 5 ether), searcherData);
 
         IPoolManager.SwapParams memory p2 = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -10 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SHARED_ROUTER, testKey, p2, victimData);
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 76);
-        vm.prank(address(mockManager));
-        hook.afterSwap(SHARED_ROUTER, testKey, p2, toBalanceDelta(-10 ether, 10 ether), victimData);
+        mockManager.simulateSwap(hook, SHARED_ROUTER, testKey, p2, uint160(1 << 96), 76, toBalanceDelta(-10 ether, 10 ether), victimData);
 
         IPoolManager.SwapParams memory p3 = IPoolManager.SwapParams({zeroForOne: false, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SHARED_ROUTER, testKey, p3, searcherData);
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 98);
-
-        vm.expectEmit(true, true, true, false);
+        vm.expectEmit(true, true, true, false, address(hook));
         emit ExtractionDetected(testPoolId, SEARCHER, VICTIM, 0, bytes32(0));
 
-        vm.prank(address(mockManager));
-        hook.afterSwap(SHARED_ROUTER, testKey, p3, toBalanceDelta(5.2 ether, -5 ether), searcherData);
+        mockManager.simulateSwap(hook, SHARED_ROUTER, testKey, p3, uint160(1 << 96), 98, toBalanceDelta(5.2 ether, -5 ether), searcherData);
     }
 
     function testFuzz_SandwichProfitAndDirectionInvariants(
@@ -340,29 +321,16 @@ contract DarkTraceHookTest is Test {
 
         // 1. Frontrun
         IPoolManager.SwapParams memory p1 = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(SEARCHER, testKey, p1, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 100 + pushTicks);
-        vm.prank(address(mockManager));
-        hook.afterSwap(SEARCHER, testKey, p1, toBalanceDelta(int128(frontrunAmt0), 5 ether), "");
+        mockManager.simulateSwap(hook, SEARCHER, testKey, p1, uint160(1 << 96), 100 + pushTicks, toBalanceDelta(int128(frontrunAmt0), 5 ether), "");
 
         // 2. Victim
         IPoolManager.SwapParams memory p2 = IPoolManager.SwapParams({zeroForOne: true, amountSpecified: -10 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(VICTIM, testKey, p2, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 100 + pushTicks - 4);
-        vm.prank(address(mockManager));
-        hook.afterSwap(VICTIM, testKey, p2, toBalanceDelta(-10 ether, 10 ether), "");
+        mockManager.simulateSwap(hook, VICTIM, testKey, p2, uint160(1 << 96), 100 + pushTicks - 4, toBalanceDelta(-10 ether, 10 ether), "");
 
         // 3. Backrun
         IPoolManager.SwapParams memory p3 = IPoolManager.SwapParams({zeroForOne: false, amountSpecified: -5 ether, sqrtPriceLimitX96: 0});
-        vm.prank(address(mockManager));
-        hook.beforeSwap(backrunCaller, testKey, p3, "");
-        mockManager.setSlot0(testPoolId, uint160(1 << 96), 100 + pushTicks - 4 + pullTicks);
-
         vm.recordLogs();
-        vm.prank(address(mockManager));
-        hook.afterSwap(backrunCaller, testKey, p3, toBalanceDelta(int128(backrunAmt0), -5 ether), "");
+        mockManager.simulateSwap(hook, backrunCaller, testKey, p3, uint160(1 << 96), 100 + pushTicks - 4 + pullTicks, toBalanceDelta(int128(backrunAmt0), -5 ether), "");
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
         int24 absPush = -pushTicks;
