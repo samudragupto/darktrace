@@ -117,6 +117,8 @@ Judges should be able to tell at a glance what runs for real.
 | **Base Sepolia** | `SearcherRegistry` | `0x24A2669C706CCE71BAea24a4De18D9D215713551` | Searcher bond escrow and owner-governed slashing |
 | **Arc Testnet** | `SimulationRegistry` v2 (Foundry) | `0xd501D47b246438A18C8a0BFFCF10338CfBB661a2` | Active attestation registry (beneficiary-gated; used by Verified Run #2) |
 | **Arc Testnet** | `RebateVault` v2 (Foundry) | `0x238dE56E52A3F6C6708952052e6a20E5102b4d5b` | Active settlement vault (paid `3.539977 USDC` to Victim EOA in Verified Run #2; `1.460023 USDC` reserve remaining) |
+| **Arc Testnet** | `SimulationRegistry` v2 Escrow + Expiry | `0x31d51d7d05CE62030CBABF57D0f5376b86C70E77` | Escrow dispute window (`flagDispute` / `resolveDispute`) + claim expiry tracking (verified in txs [`0x5f858712…`](https://explorer.testnet.arc.io/tx/0x5f858712f594e689444cdbe11ba57e1742af70afbd01f73ef1ff3946230f3d34), [`0x0915cb01…`](https://explorer.testnet.arc.io/tx/0x0915cb01c4c655e6d219d6c31c6b67edbd0d6eb8d12743aae1b81cfb55daba60), [`0x8aa76387…`](https://explorer.testnet.arc.io/tx/0x8aa763876c395f41829a1e5ffcfbe1acda5d567401615f2669b20fa96f91801d)) |
+| **Arc Testnet** | `RebateVault` v2 Escrow + Expiry | `0x0897Cc21DaD8aC9Fe5Deb4971e2f8c390E7BE104` | Enforces `DisputeWindowActive`, `AttestationDisputed`, `ClaimExpired`, and `expireUnclaimedRebate` on-chain USDC reserve recycling |
 | **Arc Testnet** | `SimulationRegistry` v1 (Foundry, retired) | `0xb8416cb4d82BA72b70C3EC55d7AC66b5DB415CF8` | Retired (used by verified run #1; attestation `0x50ab85ca…d9eec9`) |
 | **Arc Testnet** | `RebateVault` v1 (Foundry, retired) | `0x2ab745F51002Ce236A9A2dA81cDaA553B87f28CD` | Retired (used by verified run #1; paid `3.571583 USDC` in `0x4202622d…a4963f`, remaining `1.428417 USDC` migrated to v2) |
 | **Arc Testnet** | `SimulationRegistry` (Arc Studio) | `0x52794Da13E573c9e73D32248a286843418Ba2983` | Generated, tested and deployed in Arc Studio (v1 schema) |
@@ -182,12 +184,14 @@ pnpm arkiv:write-test   # needs ARKIV_PRIVATE_KEY: writes one receipt and reads 
 - **Settlement asset:** Arc native USDC (`0x3600…0000`, 6 decimals).
 - **What the vault enforces:**
   - **only the victim can claim (v2):** each attestation names a `beneficiary` (the wallet that signed the victim's swap), and `claimRebate` reverts with `NotBeneficiary` for anyone else, so knowing a receipt hash is not enough to take its rebate. The beneficiary chooses where the USDC goes.
+  - **escrow dispute window (`disputeWindowSeconds`):** attestations are claimable only after `claimableAt = attestedAt + disputeWindowSeconds`. Authorized challengers or the owner can call `flagDispute(receiptHash, reason)` in the window (`AttestationDisputed`), and the owner can uphold (with adjusted USDC) or revoke via `resolveDispute`.
+  - **claim expiry & on-chain reserve recycling (`claimExpirySeconds`):** unclaimed rebates expire at `expiresAt = claimableAt + claimExpirySeconds` (`ClaimExpired`). Anyone can call `expireUnclaimedRebate(receiptHash)` after expiry to recycle unclaimed rebate liabilities back into the vault's active USDC reserve (`totalExpiredUSDC` vs `totalClaimedUSDC` tracked on-chain).
   - pays only against a receipt attested in `SimulationRegistry`
   - never pays more than the attested amount
   - pays each receipt at most once (replay nullifier)
   - checks-effects-interactions with a reentrancy guard
   - blocks self-payout
-- **Live app settlement:** Studio's deployer key cannot be exported, so the live app uses a Foundry deployment of the registry and vault (funded with 5.00 USDC). Details: [`arc-studio/report.md`](arc-studio/report.md).
+- **Live app settlement vs. Arc Studio deployment:** Arc Studio deploys from a cloud-custodied key (`0x5B12Ce46C7194aD57d143bC22847224047b1Ef42`) that cannot be exported and provides no post-deploy console to call `transferOwnership(0xb491…aDA5)`. Because `recordSimulation` is `onlyOwner`, the live app and indexer (`0xb491…aDA5`) settle against our self-custodied Foundry v2 deployment (`0xd501…61a2` / `0x238d…4d5b`, funded with 5.00 USDC), while the v2 Escrow + Claim Expiry contracts (`0x31d5…0E77` / `0x0897…E104`) and [`arc-studio/prompt.md`](arc-studio/prompt.md) carry the full dispute-window and expiry suite. Details: [`arc-studio/report.md`](arc-studio/report.md).
 - **v1 → v2 migration:** the v1 Foundry vault (`0x2ab7…28CD`) did not check who was claiming. [`DeployArcV2.s.sol`](contracts/script/DeployArcV2.s.sol) deployed the beneficiary-gated v2 registry (`0xd501…61a2`) and vault (`0x238d…4d5b`), and the remaining `1.428417 USDC` reserve was migrated from v1 to v2 ([withdraw tx](https://explorer.testnet.arc.io/tx/0xacb28962d8b908e7a74ecea07f0fb036dfa4b694dba63fac1e47a89eb755c503) → [deposit tx](https://explorer.testnet.arc.io/tx/0xb8ac54e9d1c3cd73804330d6fe0e67f5712056768a9d7ca8b36089c13e3d36fa)). The indexer detects the registry version and attests with a beneficiary on v2.
 
 ---
