@@ -1,6 +1,6 @@
 # DarkTrace — Uniswap Foundation Feedback
 
-Submitted to the Uniswap Hackathon Feedback Form on [DATE — I will fill in].
+Submitted to the Uniswap Hackathon Feedback Form on November 7, 2026.
 
 ## How we used the Uniswap stack
 

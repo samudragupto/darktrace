@@ -1,46 +1,57 @@
-# DarkTrace — Partner Booth Strategy (Uniswap → Arc → Arkiv)
+# DarkTrace — Partner Booth Strategy & Video Demo Links
 
-Visit the three partner booths in this exact sequence: **1. Uniswap Foundation → 2. Arc → 3. Arkiv**. Before starting each conversation, set the browser URL bar on your laptop to the designated live page.
+Visit the three partner booths in this exact sequence: **1. Uniswap Foundation → 2. Arc → 3. Arkiv**.
+*(For the full 2:45 video recording script with timestamps, see [`specs/06-demo-script.md`](../06-demo-script.md).)*
+
+---
+
+## Quick-Open Browser Tabs (In Order for Video & Booth Demo)
+
+1. **Tab 1 — Overview Page (`/`):**
+   https://darktrace-lovat.vercel.app
+2. **Tab 2 — Base Sepolia Hook v2 `ExtractionDetected` Tx (Blockscout Logs tab):**
+   https://base-sepolia.blockscout.com/tx/0xef694630199a91f86c1b8cdae55b0f3192373d7e776d7d3032fd2aa120a051c8?tab=logs
+3. **Tab 3 — Interactive Forensic Terminal (`/demo`):**
+   https://darktrace-lovat.vercel.app/demo
+4. **Tab 4 — Surveillance Dashboard (`/dashboard`):**
+   https://darktrace-lovat.vercel.app/dashboard
+5. **Tab 5 — Verified Run #2 Receipt Page (`/receipt/0xe191…`):**
+   https://darktrace-lovat.vercel.app/receipt/0xe191f885168d1d06b6c7d27ef00504d58f7661c7da5adc8c3a79aaf8bb72959a
+6. **Tab 6 — Arkiv Rabdi Explorer (Verified Run #2 Receipt Entity `$key`):**
+   https://rabdi.explorer.arkiv.network/entity/0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27
+7. **Tab 7 — Arc Testnet Explorer (`NotBeneficiary` Revert Proof Tx):**
+   https://explorer.testnet.arc.io/tx/0xef11bca9a7f4b64983a2404834cdf1c817c1aeda334a73f0958cfa3aeddca8eb
+8. **Tab 8 — Arc Testnet Explorer (Victim EOA `$3.54 USDC` Claim Tx):**
+   https://explorer.testnet.arc.io/tx/0xb72bd280acafa1f1cec3f6738066070e1bc0940408348ed530fb54b39df1fd00
 
 ---
 
 ## 1. Uniswap Foundation Booth
 
-- **Pre-Load URL Bar Before Approaching**:
-  `https://darktrace-lovat.vercel.app/receipt/0x9c8d1f2b3e4a5061728394a5b6c7d8e9f01234567890abcdef1234567890abcd`
-  *(Also keep [`contracts/src/DarkTraceHook.sol`](../../contracts/src/DarkTraceHook.sol) open at lines `125–205` in a second tab).*
+- **Pre-Load Tabs Before Approaching**:
+  - **Tab 2:** `https://base-sepolia.blockscout.com/tx/0xef694630199a91f86c1b8cdae55b0f3192373d7e776d7d3032fd2aa120a051c8?tab=logs`
+  - **Code:** [`contracts/src/DarkTraceHook.sol`](../../contracts/src/DarkTraceHook.sol) (lines `124–246`) and [`FEEDBACK.md`](../../FEEDBACK.md)
 - **30-Second Pitch**:
-  *"We built DarkTrace (`0xBCC9…80c0` on Base Sepolia, mined for `0x00C0` flags). Instead of adding latency or reverting swaps in `beforeSwap`, our hook uses `tstore` to measure intra-block tick inversions across 3-tx sandwiches and emits `ExtractionDetected` for post-block LP restitution."*
-- **Specific Question to Ask at the Booth**:
-  > *"Because EIP-1153 `tstore` clears at the end of each transaction, a 3-transaction sandwich (frontrun Tx A, victim Tx B, backrun Tx C) forced us to mirror our bit-packed `PoolTransientState` across `tstore` and `sstore` slots (`stateA`, `stateB`). Is the Foundation exploring block-scoped checkpoints on `PoolManager` or an `afterBlock` callback pattern for multi-tx MEV hooks?"*
-- **Specific Feedback Snippet to Deliver**:
-  > *"In `DarkTraceHook.sol` (`lines 257–301`), we had to store `frontrunTickDelta` separately from `lastTickDelta` and fall back from `tload` to `sload` across separate transactions in the same block. A canonical v4 transient-checkpoint pattern in the hook docs would save every MEV hook developer hours."*
+  > *"We built and deployed `DarkTraceHook` v1 (`0xBCC9…80c0`) and v2 (`0xCeF7…c0c0`, mined for `0x00C0` flags) on Base Sepolia. Instead of adding latency or reverting swaps in `beforeSwap`, our hook uses EIP-1153 `tstore` in `beforeSwap` and a lazy block-scoped fallback in `afterSwap`—cutting clean-swap gas by 53.7%. It verifies searcher round-trip profitability using `BalanceDelta`, supports opt-in `hookData` victim attribution, and emits `ExtractionDetected` for post-block USDC restitution."*
 
 ---
 
 ## 2. Arc Booth
 
-- **Pre-Load URL Bar Before Approaching**:
-  `https://darktrace-lovat.vercel.app/demo`
-  *(Point to `VAULT RESERVE (ARC): $5.00 USDC` read live from `0x2ab745F51002Ce236A9A2dA81cDaA553B87f28CD` on Arc Testnet).*
+- **Pre-Load Tabs Before Approaching**:
+  - **Tab 3:** `https://darktrace-lovat.vercel.app/demo`
+  - **Tab 7 & Tab 8:** `NotBeneficiary` Revert Tx (`0xef11bca9…`) and Victim EOA Claim Tx (`0xb72bd280…`)
+  - **Arc Studio:** `https://studio.arc.io/app/c3240360-99a1-4a97-b03e-5e547be78a32`
 - **30-Second Pitch**:
-  *"We deployed `SimulationRegistry` (`0xb841…5CF8`) and `RebateVault` (`0x2ab7…28CD`, pre-funded with `5.00 USDC`) on Arc Testnet. When our off-chain constant-product counterfactual engine proves injected sandwich slippage, affected LPs claim `$1.25 USDC` rebates directly on Arc with sub-cent gas."*
-- **Specific Question to Ask at the Booth**:
-  > *"We kept Base Sepolia searcher bond reduction and Arc pre-funded vault payouts as two independent, asynchronous flows rather than faking a bridge. For production, what is the recommended Circle CCTP / Arc pattern for streaming slashed collateral from an L2 into an Arc `RebateVault`?"*
-- **Specific Feedback Snippet to Deliver**:
-  > *"When deploying `DeployArcTestnet.s.sol` via Foundry, we hit `-32003: insufficient funds for gas * price + value` because `forge script` estimates native gas in 18-decimal wei (`43.5 gwei`), whereas `IERC20(0x3600...).transfer()` inside `RebateVault.sol` uses 6-decimal USDC units. Adding a '18-decimal gas vs. 6-decimal `0x3600...` ERC-20' table to the Arc docs would immediately unblock Foundry developers."*
+  > *"We generated and tested `SimulationRegistry` and `RebateVault` in Arc Studio (60/60 tests passing) and settled two real native 6-decimal USDC rebates (`$3.57` and `$3.54 USDC`) on Arc Testnet. In Verified Run #2, our v2 vault proved on-chain that an unauthorized operator claim reverts with `NotBeneficiary` (`0xef11bca9…`), and only the Victim EOA (`0x524e…51Db`) succeeded in claiming `$3.539977 USDC` (`0xb72bd280…`). We also deployed an escrow dispute window (`flagDispute` / `resolveDispute`) and claim-expiry reserve recycling (`expireUnclaimedRebate`)."*
 
 ---
 
 ## 3. Arkiv Booth
 
-- **Pre-Load URL Bar Before Approaching**:
-  `https://darktrace-lovat.vercel.app/dashboard`
-  *(Also keep [`https://darktrace-lovat.vercel.app/api/stats`](https://darktrace-lovat.vercel.app/api/stats) and [`lib/arkiv/schemas.ts`](../../lib/arkiv/schemas.ts) open in adjacent tabs).*
+- **Pre-Load Tabs Before Approaching**:
+  - **Tab 4:** `https://darktrace-lovat.vercel.app/dashboard`
+  - **Tab 5:** `https://darktrace-lovat.vercel.app/receipt/0xe191f885168d1d06b6c7d27ef00504d58f7661c7da5adc8c3a79aaf8bb72959a`
+  - **Tab 6:** `https://rabdi.explorer.arkiv.network/entity/0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27`
 - **30-Second Pitch**:
-  *"We use Arkiv (`darktrace.v1` namespace) as our queryable forensic proof ledger across three schemas: `ExtractionReceipt`, `SearcherProfile`, and `LPClaim`. While `RebateVault.sol` only checks a 32-byte `receiptHash` nullifier on-chain, Arkiv makes extraction history queryable by `poolId`, `searcher`, and `victim` without scanning Base Sepolia blocks."*
-- **Specific Question to Ask at the Booth**:
-  > *"In `lib/arkiv/schemas.ts`, we hash a deterministically ordered JSON payload (`computeReceiptHash`) so the Arkiv entity ID (`darktrace.v1:receipt:<hash>`) matches the `bytes32 receiptHash` attested on-chain in `SimulationRegistry.sol`. Does Arkiv plan to support native content-addressed entity IDs or EIP-712 digest indexing at the RPC layer?"*
-- **Specific Feedback Snippet to Deliver**:
-  > *"The trickiest part of `lib/arkiv/schemas.ts` (`line 51`) was enforcing deterministic key ordering and lowercase normalization (`txHashes.map(h => h.toLowerCase())`) so off-chain Arkiv queries and on-chain `keccak256` nullifiers never diverged—and building an in-memory fixture fallback in `lib/arkiv/client.ts` for offline CI tests. A typed `@arkiv/sdk` package with canonical hashing and local test fixtures would be a huge DX win."*
-
+  > *"DarkTrace uses Arkiv Rabdi (`chain 7794095`, `darktrace.v1` namespace) via `@arkiv-network/sdk` as its sole, zero-mock forensic database across three schemas: `ExtractionReceipt`, `SearcherProfile`, and `LPClaim`. Every UI page queries Arkiv live filtered to our writer wallet (`ownedBy`), strictly separates canonical `receiptHash` from `arkivEntityKey` (`$key`), and uses `extendEntity` to extend receipts with open, unclaimed rebates from a 30-day TTL to a 90-day TTL (verified on Rabdi in tx `0x03512e4f…8744`)."*
