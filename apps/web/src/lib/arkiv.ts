@@ -39,6 +39,8 @@ export interface ReceiptView {
   txHashes: string[];
   status: "ARCHIVED" | "REBATED";
   claimTx?: string;
+  /** "hook" | "linked-origin"; receipts written before the field existed were all hook-detected. */
+  detection: "hook" | "linked-origin";
 }
 
 export type ArkivResult<T> =
@@ -74,6 +76,7 @@ export function toView(r: ArkivReceipt, claim?: ArkivLPClaim | null): ReceiptVie
     txHashes: r.txHashes,
     status: claim ? "REBATED" : "ARCHIVED",
     claimTx: claim?.claimTx,
+    detection: r.detection === "linked-origin" ? "linked-origin" : "hook",
   };
 }
 

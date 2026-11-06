@@ -1,11 +1,18 @@
+/**
+ * Static metadata for the pools the dashboard lists. Only pools that exist on-chain (or the SDK
+ * smoke-test fixture, labeled as such) appear here; no TVL/volume is invented. Extraction figures
+ * always come from Arkiv.
+ */
 export interface MockPool {
   id: string;
   name: string;
   feeTier: string;
-  tvl: string;
-  volume24h: string;
-  extracted24h: string;
-  status: "ACTIVE" | "CLEAN";
+  /** Which DarkTraceHook the pool is attached to, or "fixture" for the SDK smoke-test receipts. */
+  hook: "v1" | "v2" | "fixture";
+  /** Deployed hook address (Base Sepolia); absent for the fixture. */
+  hookAddress?: string;
+  /** Base Sepolia tx that initialized the pool; absent for the fixture. */
+  initTx?: string;
   token0: string;
   token1: string;
 }
@@ -34,62 +41,35 @@ export interface MockReceipt {
 
 export const MOCK_POOLS: MockPool[] = [
   {
-    // Real Hook v2 pool on DarkTraceHook v2 (0xCeF7…c0c0), initialized on Base Sepolia (block 55,162,442).
+    // Real pool on DarkTraceHook v2 (Base Sepolia, block 55,162,442).
     id: "0x5d78af67b033875696613c57b5a68f4a62eba0d98095844b0e9c8c691afc63df",
     name: "tUSDC / tWETH (Hook v2)",
     feeTier: "0.30%",
-    tvl: "n/a",
-    volume24h: "n/a",
-    extracted24h: "$0.00",
-    status: "ACTIVE",
+    hook: "v2",
+    hookAddress: "0xCeF7a999885D93f23Beeb7D319A83F2949B2c0c0",
+    initTx: "0x495bf0757164e3dbb95cb667ae2d8aa5d890372b96fa9f82fd5375a2fe685f90",
     token0: "0x80eddda74d7127db41a3ce86a8e8d5621ec7f4df",
     token1: "0xd501d47b246438a18c8a0bffcf10338cfbb661a2",
   },
   {
-    // Real pool on the deployed DarkTraceHook v1, created by `pnpm e2e:real` (Base Sepolia, block 55,113,082).
-    // TVL/volume are not tracked; extraction figures on the dashboard come from Arkiv.
+    // Real pool on DarkTraceHook v1, created by `pnpm e2e:real` (Base Sepolia, block 55,113,082).
     id: "0x2183dce5625ecbb1cf175be52a75b31eeed7bf7774181e3136ba49f6fc3c676c",
     name: "tUSDC / tWETH (Hook v1)",
     feeTier: "0.30%",
-    tvl: "n/a",
-    volume24h: "n/a",
-    extracted24h: "$0.00",
-    status: "ACTIVE",
+    hook: "v1",
+    hookAddress: "0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0",
     token0: "0x80eddda74d7127db41a3ce86a8e8d5621ec7f4df",
     token1: "0xd501d47b246438a18c8a0bffcf10338cfbb661a2",
   },
   {
+    // Pool id used by the two Arkiv SDK smoke-test receipts (0x1111…/0x2222… addresses).
+    // It is NOT an on-chain pool; listed so those fixture receipts have a home, and labeled as such.
     id: "0x835c24ae58a98118715d7541b2c5f0df8f11ca328b8e9c9c3850441c632e8d21",
-    name: "WETH / USDC",
-    feeTier: "0.05%",
-    tvl: "$1,250.00",
-    volume24h: "$420.00",
-    extracted24h: "$2.10",
-    status: "ACTIVE",
+    name: "SDK fixture (not an on-chain pool)",
+    feeTier: "—",
+    hook: "fixture",
     token0: "0x4200000000000000000000000000000000000006",
     token1: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-  },
-  {
-    id: "0x2a1b9487c02b8510fbc282901928014810294821092830192830192830192831",
-    name: "cbBTC / USDC",
-    feeTier: "0.30%",
-    tvl: "$890.00",
-    volume24h: "$310.00",
-    extracted24h: "$1.65",
-    status: "ACTIVE",
-    token0: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
-    token1: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-  },
-  {
-    id: "0x3f5c908129480192830192830192830192830192830192830192830192830192",
-    name: "WETH / DEGEN",
-    feeTier: "1.00%",
-    tvl: "$340.00",
-    volume24h: "$95.00",
-    extracted24h: "$0.00",
-    status: "CLEAN",
-    token0: "0x4200000000000000000000000000000000000006",
-    token1: "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed",
   },
 ];
 

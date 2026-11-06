@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { fromArkiv, sumUSDC } from "@/lib/arkiv";
 import { getVaultReserveUSDC } from "@/lib/arc";
+import { WalletLookup } from "@/components/ui/WalletLookup";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams?: { lookup?: string } }) {
   const [res, vaultReserve] = await Promise.all([
     fromArkiv((sdk) => sdk.listRecentReceipts(25)),
     getVaultReserveUSDC(),
@@ -23,10 +24,13 @@ export default async function HomePage() {
           DARKTRACE MEV FORENSICS
         </h1>
         <p className="text-muted text-sm max-w-2xl leading-relaxed">
-          LPs are losing $1B+ annually to MEV (over $1 billion annually by conservative estimates). DarkTrace gives it back, and proves it on-chain.
+          LPs and traders lose over $1B a year to MEV (a conservative estimate). DarkTrace measures each sandwich, proves it on-chain, and pays the victim back.
           Transient-storage hooks detect extraction footprints on Base Sepolia,
           Arkiv seals immutable forensic receipts, and affected LPs claim USDC rebates on Arc.
         </p>
+        <div className="mt-5 max-w-xl">
+          <WalletLookup invalid={searchParams?.lookup === "invalid"} />
+        </div>
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <Link
             href="/demo"

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MOCK_POOLS } from "@/data/mockData";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { DemoData } from "@/components/ui/DemoData";
+import { WalletLookup } from "@/components/ui/WalletLookup";
 import { HashDisplay } from "@/components/ui/HashDisplay";
 import { ArkivSource } from "@/components/arkiv/ArkivSource";
 import { ReceiptsTable } from "@/components/arkiv/ReceiptsTable";
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
             Active surveillance of Uniswap v4 pools on Base Sepolia • Arc Testnet Settlement
           </p>
           <p className="text-[11px] text-muted font-mono mt-1">
-            Receipts and extraction totals are read live from Arkiv. Pool TVL/volume are illustrative.
+            Receipts and extraction totals are read live from Arkiv; the vault reserve is read live from Arc. Only real hooked pools (plus the labeled SDK fixture) are listed.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -88,6 +88,11 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* Wallet / receipt lookup */}
+      <div className="max-w-xl">
+        <WalletLookup />
+      </div>
+
       {/* Monitored Pools Table */}
       <div className="space-y-2">
         <div className="text-xs font-mono font-semibold text-text uppercase tracking-wider">
@@ -99,8 +104,7 @@ export default async function DashboardPage() {
               <tr className="border-b border-border text-muted bg-[#15181E] select-none">
                 <th className="py-2.5 px-3 font-semibold">Pool Pair</th>
                 <th className="py-2.5 px-3 font-semibold">Fee</th>
-                <th className="py-2.5 px-3 font-semibold text-right">TVL</th>
-                <th className="py-2.5 px-3 font-semibold text-right">24h Volume</th>
+                <th className="py-2.5 px-3 font-semibold">Hook</th>
                 <th className="py-2.5 px-3 font-semibold text-right">Extracted (Arkiv)</th>
                 <th className="py-2.5 px-3 font-semibold text-center">Status</th>
               </tr>
@@ -120,11 +124,19 @@ export default async function DashboardPage() {
                     </Link>
                   </td>
                   <td className="py-2.5 px-3 text-muted">{pool.feeTier}</td>
-                  <td className="py-2.5 px-3 text-right text-text tabular-nums">
-                    <DemoData>{pool.tvl}</DemoData>
-                  </td>
-                  <td className="py-2.5 px-3 text-right text-muted tabular-nums">
-                    <DemoData>{pool.volume24h}</DemoData>
+                  <td className="py-2.5 px-3 text-muted">
+                    {pool.hookAddress ? (
+                      <a
+                        href={`https://sepolia.basescan.org/address/${pool.hookAddress}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-text hover:underline"
+                      >
+                        DarkTraceHook {pool.hook} ({pool.hookAddress.slice(0, 6)}…{pool.hookAddress.slice(-4)})
+                      </a>
+                    ) : (
+                      <span className="italic">test fixture</span>
+                    )}
                   </td>
                   <td className="py-2.5 px-3 text-right font-semibold tabular-nums text-danger">
                     ${extractedByPool(pool.id)}
