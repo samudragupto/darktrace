@@ -44,7 +44,8 @@ contract DeployBaseSepoliaScript is Script {
         bytes memory creationCode = type(DarkTraceHook).creationCode;
         bytes memory constructorArgs = abi.encode(
             IPoolManager(BASE_SEPOLIA_POOL_MANAGER),
-            DEFAULT_MIN_TICK_DELTA
+            DEFAULT_MIN_TICK_DELTA,
+            deployer
         );
         bytes memory bytecode = abi.encodePacked(creationCode, constructorArgs);
         bytes32 bytecodeHash = keccak256(bytecode);
@@ -85,7 +86,8 @@ contract DeployBaseSepoliaScript is Script {
         // 3. Deploy DarkTraceHook via CREATE2
         DarkTraceHook hook = new DarkTraceHook{salt: minedSalt}(
             IPoolManager(BASE_SEPOLIA_POOL_MANAGER),
-            DEFAULT_MIN_TICK_DELTA
+            DEFAULT_MIN_TICK_DELTA,
+            deployer
         );
         hookAddress = address(hook);
         require(hookAddress == predictedAddress, "Address mismatch");

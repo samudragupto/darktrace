@@ -112,7 +112,8 @@ Judges should be able to tell at a glance what runs for real.
 | Network | Contract / Component | Address | Description |
 | :--- | :--- | :--- | :--- |
 | **Base Sepolia** | Uniswap v4 `PoolManager` | `0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408` | Canonical v4 Pool Manager |
-| **Base Sepolia** | `DarkTraceHook` | `0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0` | Hook with `0x00C0` (`beforeSwap` / `afterSwap`) permission flags |
+| **Base Sepolia** | `DarkTraceHook` v2 | `0xCeF7a999885D93f23Beeb7D319A83F2949B2c0c0` | Hook v2 (`0x00C0` flags, salt `0x180d`): explicit owner, `BalanceDelta` profit-consistency check, `-53.7%` clean-swap gas, opt-in `hookData` victim attribution (detected tx [`0xef694630…20a051c8`](https://base-sepolia.blockscout.com/tx/0xef694630199a91f86c1b8cdae55b0f3192373d7e776d7d3032fd2aa120a051c8), pool `0x5d78af67…1afc63df`, receipt [`$key 0x259dc288…0fd2`](https://rabdi.explorer.arkiv.network/entity/0x259dc2884aab483503458ce1ebb716c4e90bf156eadfaaa2e9761d2ec60b0fd2)) |
+| **Base Sepolia** | `DarkTraceHook` v1 | `0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0` | Hook v1 (`0x00C0` flags, salt `0x139d`; used by Verified Runs #1 & #2 on pool `0x2183dce5…c676c`) |
 | **Base Sepolia** | `SearcherRegistry` | `0x24A2669C706CCE71BAea24a4De18D9D215713551` | Searcher bond escrow and owner-governed slashing |
 | **Arc Testnet** | `SimulationRegistry` v2 (Foundry) | `0xd501D47b246438A18C8a0BFFCF10338CfBB661a2` | Active attestation registry (beneficiary-gated; used by Verified Run #2) |
 | **Arc Testnet** | `RebateVault` v2 (Foundry) | `0x238dE56E52A3F6C6708952052e6a20E5102b4d5b` | Active settlement vault (paid `3.539977 USDC` to Victim EOA in Verified Run #2; `1.460023 USDC` reserve remaining) |
@@ -308,6 +309,7 @@ The full specifications are in [`/specs`](specs):
 - [`05-ui-ux.md`](specs/05-ui-ux.md): forensic terminal styling guidelines
 - [`06-demo-script.md`](specs/06-demo-script.md): 3-minute video script
 - [`07-deployment.md`](specs/07-deployment.md): reproducible deployment instructions
+- [`08-hook-threat-model.md`](specs/08-hook-threat-model.md): Hook v1 → v2 threat model, false-positive/false-negative analysis, and gas benchmarks
 
 ---
 
