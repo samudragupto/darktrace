@@ -25021,7 +25021,7 @@ async function reconstructSandwich(client, params) {
 }
 
 // src/pipeline.ts
-var DEFAULT_SIMULATION_REGISTRY = "0xb8416cb4d82BA72b70C3EC55d7AC66b5DB415CF8";
+var DEFAULT_SIMULATION_REGISTRY = "0xd501D47b246438A18C8a0BFFCF10338CfBB661a2";
 var arcTestnet = defineChain({
   id: 5042002,
   name: "Arc Testnet",

@@ -10,6 +10,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+if [ -z "${PRIVATE_KEY:-}" ]; then
+  if [ -n "${ARKIV_PRIVATE_KEY:-}" ]; then
+    PRIVATE_KEY="$ARKIV_PRIVATE_KEY"
+  elif [ -f .env ]; then
+    PRIVATE_KEY=$(grep -E '^ARKIV_PRIVATE_KEY=' .env | head -n 1 | cut -d= -f2- | tr -d '"'\'' ' | tr -d '\r')
+  fi
+fi
+
 : "${PRIVATE_KEY:?set PRIVATE_KEY to the DarkTrace writer wallet key}"
 BASE_RPC="${BASE_SEPOLIA_RPC:-https://sepolia.base.org}"
 export ARKIV_PRIVATE_KEY="$PRIVATE_KEY"
@@ -29,7 +37,7 @@ fi
 echo "==> [2/4] Base Sepolia: frontrun -> victim -> backrun (one bundle)"
 (cd contracts && forge script script/E2ESandwich.s.sol:E2ESandwichScript --sig "sandwich()" \
   --rpc-url "$BASE_RPC" --private-key "$PRIVATE_KEY" --broadcast --slow)
-TX=$(node -e 'const f=require("fs"),p=require("path");const d="contracts/broadcast/E2ESandwich.s.sol/84532";console.log(JSON.parse(f.readFileSync(p.join(d,"sandwich-latest.json"))).receipts[0].transactionHash)')
+TX=$(node -e 'const f=require("fs"),p=require("path");const d="contracts/broadcast/E2ESandwich.s.sol/84532";const name=f.existsSync(p.join(d,"sandwich-latest.json"))?"sandwich-latest.json":"run-latest.json";console.log(JSON.parse(f.readFileSync(p.join(d,name))).receipts[0].transactionHash)')
 BLOCK=$(cast receipt "$TX" blockNumber --rpc-url "$BASE_RPC")
 POOL=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1])).poolId)' "$OUT")
 echo "    sandwich tx $TX (block $BLOCK)"

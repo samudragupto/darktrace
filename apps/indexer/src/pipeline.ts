@@ -6,7 +6,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { reconstructSandwich } from "./onchain";
 
 /** Foundry SimulationRegistry that the funded RebateVault verifies against. */
-const DEFAULT_SIMULATION_REGISTRY = "0xb8416cb4d82BA72b70C3EC55d7AC66b5DB415CF8" as const;
+const DEFAULT_SIMULATION_REGISTRY = "0xd501D47b246438A18C8a0BFFCF10338CfBB661a2" as const;
 
 const arcTestnet = defineChain({
   id: 5042002,

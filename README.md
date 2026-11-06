@@ -114,8 +114,8 @@ Judges should be able to tell at a glance what runs for real.
 | **Base Sepolia** | Uniswap v4 `PoolManager` | `0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408` | Canonical v4 Pool Manager |
 | **Base Sepolia** | `DarkTraceHook` | `0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0` | Hook with `0x00C0` (`beforeSwap` / `afterSwap`) permission flags |
 | **Base Sepolia** | `SearcherRegistry` | `0x24A2669C706CCE71BAea24a4De18D9D215713551` | Searcher bond escrow and owner-governed slashing |
-| **Arc Testnet** | `SimulationRegistry` (Foundry) | `0xb8416cb4d82BA72b70C3EC55d7AC66b5DB415CF8` | Attestation registry used by the live app |
-| **Arc Testnet** | `RebateVault` (Foundry) | `0x2ab745F51002Ce236A9A2dA81cDaA553B87f28CD` | Settlement vault used by the live app (funded with 5.00 USDC) |
+| **Arc Testnet** | `SimulationRegistry` v2 (Foundry) | `0xd501D47b246438A18C8a0BFFCF10338CfBB661a2` | Attestation registry v2 (beneficiary-gated) |
+| **Arc Testnet** | `RebateVault` v2 (Foundry) | `0x238dE56E52A3F6C6708952052e6a20E5102b4d5b` | Settlement vault v2 (funded with 1.43 USDC migrated reserve) |
 | **Arc Testnet** | `SimulationRegistry` (Arc Studio) | `0x52794Da13E573c9e73D32248a286843418Ba2983` | Generated, tested and deployed in Arc Studio |
 | **Arc Testnet** | `RebateVault` (Arc Studio) | `0x676065eb7c72ddf2048f21e6cb2ca6721827c1de` | Generated, tested and deployed in Arc Studio |
 | **Arc Testnet** | Arc native USDC (ERC-20) | `0x3600000000000000000000000000000000000000` | Native 6-decimal USDC interface |

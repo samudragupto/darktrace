@@ -13,10 +13,10 @@ export function Footer() {
       explorerUrl: "https://sepolia.basescan.org/address/0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0",
     },
     {
-      name: "RebateVault (Foundry)",
+      name: "RebateVault v2 (Foundry)",
       network: "Arc Testnet",
-      address: "0x2ab745F51002Ce236A9A2dA81cDaA553B87f28CD",
-      explorerUrl: "https://explorer.testnet.arc.io/address/0x2ab745F51002Ce236A9A2dA81cDaA553B87f28CD",
+      address: "0x238dE56E52A3F6C6708952052e6a20E5102b4d5b",
+      explorerUrl: "https://explorer.testnet.arc.io/address/0x238dE56E52A3F6C6708952052e6a20E5102b4d5b",
     },
     {
       name: "Studio RebateVault",

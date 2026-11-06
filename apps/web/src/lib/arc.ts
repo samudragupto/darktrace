@@ -1,7 +1,7 @@
 // Server-side read of the RebateVault's live USDC reserve on Arc Testnet.
 // Never substitutes a hardcoded figure: if the read fails, callers get `null`.
 const ARC_RPC_URL = process.env.NEXT_PUBLIC_ARC_RPC_URL || "https://rpc.testnet.arc.network";
-export const REBATE_VAULT = (process.env.NEXT_PUBLIC_REBATE_VAULT || "0x2ab745F51002Ce236A9A2dA81cDaA553B87f28CD").toLowerCase();
+export const REBATE_VAULT = (process.env.NEXT_PUBLIC_REBATE_VAULT || "0x238dE56E52A3F6C6708952052e6a20E5102b4d5b").toLowerCase();
 const USDC = "0x3600000000000000000000000000000000000000";
 const BALANCE_OF = "0x70a08231";
 

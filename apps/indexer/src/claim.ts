@@ -15,8 +15,8 @@ const arcTestnet = defineChain({
   nativeCurrency: { name: "USD Coin", symbol: "USDC", decimals: 6 },
   rpcUrls: { default: { http: [process.env.ARC_RPC_URL || "https://rpc.testnet.arc.network"] } },
 });
-const REGISTRY = (process.env.SIMULATION_REGISTRY_ADDRESS || "0xb8416cb4d82BA72b70C3EC55d7AC66b5DB415CF8") as Hex;
-const VAULT = (process.env.REBATE_VAULT_ADDRESS || "0x2ab745F51002Ce236A9A2dA81cDaA553B87f28CD") as Hex;
+const REGISTRY = (process.env.SIMULATION_REGISTRY_ADDRESS || "0xd501D47b246438A18C8a0BFFCF10338CfBB661a2") as Hex;
+const VAULT = (process.env.REBATE_VAULT_ADDRESS || "0x238dE56E52A3F6C6708952052e6a20E5102b4d5b") as Hex;
 const USDC = "0x3600000000000000000000000000000000000000" as const;
 
 const ABI = parseAbi([
