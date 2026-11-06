@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createPublicClient, http, isHex, type Hex } from "viem";
+import { proveRebateClaim } from "@/lib/claims";
 import { arkiv } from "@darktrace/arkiv";
 import { arcTestnet } from "@/config/chains";
 
@@ -15,6 +16,11 @@ const CLAIMED_ABI = [
   },
 ] as const;
 
+/**
+ * Records an Arc rebate claim as an Arkiv LPClaim. Public endpoint, so nothing in the body is trusted:
+ * the claim tx must be a successful tx on Arc whose logs contain RebateClaimed(receiptHash) emitted by
+ * RebateVault v2, and the LP recorded on Arkiv is the event's `recipient`, never the request's `lp`.
+ */
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as {
@@ -56,9 +62,13 @@ export async function POST(req: Request) {
     if (txReceipt.status !== "success") {
       return NextResponse.json({ ok: false, error: "Arc claim transaction did not succeed on-chain" }, { status: 400 });
     }
-    if (!isClaimed) {
-      return NextResponse.json({ ok: false, error: "Receipt is not marked claimed on Arc RebateVault v2" }, { status: 400 });
+
+    // The tx must actually be the vault's claim of THIS receipt; the recipient comes from the event.
+    const proof = proveRebateClaim(txReceipt.logs, REBATE_VAULT_V2, receiptHash, lp);
+    if (!proof.ok) {
+      return NextResponse.json({ ok: false, error: proof.error }, { status: 400 });
     }
+    const recipient = proof.recipient;
 
     const sdk = arkiv();
     const existing = await sdk.claimForReceipt(receiptHash);
@@ -81,7 +91,7 @@ export async function POST(req: Request) {
 
     const written = await sdk.writeLPClaim({
       v: "1.0.0",
-      lp,
+      lp: recipient,
       receiptHash,
       claimTx,
       createdAt: Date.now(),
