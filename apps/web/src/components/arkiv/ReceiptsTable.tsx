@@ -41,9 +41,19 @@ export function ReceiptsTable({ receipts, columns, emptyText }: ReceiptsTablePro
           {receipts.map((r) => (
             <tr key={r.arkivEntityKey} className="hover:bg-[#181B20] transition-colors group">
               <td className="py-2.5 px-3">
-                <Link href={`/receipt/${r.receiptHash}`}>
-                  <HashDisplay hash={r.receiptHash} className="group-hover:text-accent" />
-                </Link>
+                <div className="flex items-center gap-1.5">
+                  <Link href={`/receipt/${r.receiptHash}`}>
+                    <HashDisplay hash={r.receiptHash} className="group-hover:text-accent" />
+                  </Link>
+                  {r.isSynthetic && (
+                    <span
+                      title="Synthetic SDK smoke-test fixture (scripts/arkiv-write-test.ts)"
+                      className="px-1.5 py-0.5 text-[10px] border border-accent/40 bg-accent/10 text-accent rounded font-semibold uppercase"
+                    >
+                      FIXTURE
+                    </span>
+                  )}
+                </div>
               </td>
               {columns.includes("pool") && (
                 <td className="py-2.5 px-3 text-text">
@@ -83,7 +93,17 @@ export function ReceiptsTable({ receipts, columns, emptyText }: ReceiptsTablePro
                 </a>
               </td>
               <td className="py-2.5 px-3 text-center">
-                <StatusPill status={r.status} />
+                <div className="inline-flex items-center gap-1.5">
+                  <StatusPill status={r.status} />
+                  {r.hasExtendedExpiry && r.status === "ARCHIVED" && (
+                    <span
+                      title="Open-claim receipt expiry extended to 90 days via extendEntity"
+                      className="px-1.5 py-0.5 text-[10px] border border-[#BC8CFF]/40 bg-[#BC8CFF]/10 text-[#BC8CFF] rounded font-semibold"
+                    >
+                      90d TTL
+                    </span>
+                  )}
+                </div>
               </td>
             </tr>
           ))}

@@ -13,7 +13,7 @@
     "arkiv:write-test": "pnpm --filter @darktrace/arkiv exec tsx ../../scripts/arkiv-write-test.ts",
     "dev": "pnpm --filter @darktrace/web dev",
     "arkiv:verify": "pnpm --filter @darktrace/arkiv exec tsx verify-live.ts",
-    "e2e:real": "bash scripts/e2e-real-run.sh"
+    "e2e:real": "node scripts/e2e-real-run.mjs"
   },
   "devDependencies": {
     "typescript": "^5.4.5"

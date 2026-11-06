@@ -98,11 +98,11 @@ Judges should be able to tell at a glance what runs for real.
 | Component | Status |
 | :--- | :--- |
 | `DarkTraceHook`, `SearcherRegistry` on Base Sepolia | **Deployed** |
-| `SimulationRegistry`, `RebateVault` on Arc Testnet | **Deployed.** The Foundry vault was funded with 5.00 USDC and has **paid out a real 3.57 USDC rebate** (see below) |
+| `SimulationRegistry`, `RebateVault` on Arc Testnet | **Deployed.** v1 paid out **3.57 USDC** in Verified Run #1; beneficiary-gated v2 (`0xd501…61a2` / `0x238d…4d5b`) was topped up to **5.00 USDC**, blocked an unauthorized operator claim (`NotBeneficiary`), and **paid out 3.54 USDC to the separate Victim EOA** in Verified Run #2 (`1.460023 USDC` reserve remaining) |
 | Indexer watching the hook | **Live** (`/api/indexer/health` reports the hook address and `arkivWriter`) |
-| Arkiv receipts | **Live.** Written with the SDK, read by `/dashboard`, `/receipt`, `/pool`, `/searcher`, `/lp`, `/api/stats` |
-| Arc vault USDC reserve | **Live** on-chain `balanceOf` read in `/api/stats` (the dashboard badge shows the funded amount) |
-| `/demo` walkthrough | **Simulated in the browser.** It replays the pipeline and does not broadcast the rebate claim |
+| Arkiv receipts, claims & searcher profiles | **Live.** Written with the SDK (`30d` standard TTL, extended to `90d` for open claims), read by `/dashboard`, `/receipt`, `/pool`, `/searcher`, `/lp`, `/api/stats` (`ON-CHAIN` vs `SYNTHETIC [DEMO]` labeled in UI) |
+| Arc vault USDC reserve & interactive claim | **Live.** On-chain `balanceOf` read in `/api/stats` and `/dashboard`; `/receipt/[hash]` includes a live wagmi **Claim Rebate** panel that checks `beneficiary` on Arc v2, calls `claimRebate`, and seals `LPClaim` on Arkiv |
+| `/demo` walkthrough | **Dual-mode:** **(1) Replay Verified On-Chain Runs** (driven by real Base Sepolia, Arkiv, and Arc tx/entity data for Verified Run #2, Hook v2 Run, and Verified Run #1) and **(2) Browser Simulation Sandbox `[DEMO]`** |
 | Pool TVL / 24h volume on the dashboard | **Illustrative**, marked `[DEMO]` in the UI |
 
 ---
@@ -112,16 +112,25 @@ Judges should be able to tell at a glance what runs for real.
 | Network | Contract / Component | Address | Description |
 | :--- | :--- | :--- | :--- |
 | **Base Sepolia** | Uniswap v4 `PoolManager` | `0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408` | Canonical v4 Pool Manager |
-| **Base Sepolia** | `DarkTraceHook` | `0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0` | Hook with `0x00C0` (`beforeSwap` / `afterSwap`) permission flags |
+| **Base Sepolia** | `DarkTraceHook` v2 | `0xCeF7a999885D93f23Beeb7D319A83F2949B2c0c0` | Hook v2 (`0x00C0` flags, salt `0x180d`): explicit owner, `BalanceDelta` profit-consistency check, `-53.7%` clean-swap gas, opt-in `hookData` victim attribution (detected tx [`0xef694630…20a051c8`](https://base-sepolia.blockscout.com/tx/0xef694630199a91f86c1b8cdae55b0f3192373d7e776d7d3032fd2aa120a051c8), pool `0x5d78af67…1afc63df`, receipt [`$key 0x259dc288…0fd2`](https://rabdi.explorer.arkiv.network/entity/0x259dc2884aab483503458ce1ebb716c4e90bf156eadfaaa2e9761d2ec60b0fd2)) |
+| **Base Sepolia** | `DarkTraceHook` v1 | `0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0` | Hook v1 (`0x00C0` flags, salt `0x139d`; used by Verified Runs #1 & #2 on pool `0x2183dce5…c676c`) |
 | **Base Sepolia** | `SearcherRegistry` | `0x24A2669C706CCE71BAea24a4De18D9D215713551` | Searcher bond escrow and owner-governed slashing |
-| **Arc Testnet** | `SimulationRegistry` v2 (Foundry) | `0xd501D47b246438A18C8a0BFFCF10338CfBB661a2` | Attestation registry v2 (beneficiary-gated) |
-| **Arc Testnet** | `RebateVault` v2 (Foundry) | `0x238dE56E52A3F6C6708952052e6a20E5102b4d5b` | Settlement vault v2 (funded with 1.43 USDC migrated reserve) |
-| **Arc Testnet** | `SimulationRegistry` (Arc Studio) | `0x52794Da13E573c9e73D32248a286843418Ba2983` | Generated, tested and deployed in Arc Studio |
-| **Arc Testnet** | `RebateVault` (Arc Studio) | `0x676065eb7c72ddf2048f21e6cb2ca6721827c1de` | Generated, tested and deployed in Arc Studio |
+| **Arc Testnet** | `SimulationRegistry` v2 (Foundry) | `0xd501D47b246438A18C8a0BFFCF10338CfBB661a2` | Active attestation registry (beneficiary-gated; used by Verified Run #2) |
+| **Arc Testnet** | `RebateVault` v2 (Foundry) | `0x238dE56E52A3F6C6708952052e6a20E5102b4d5b` | Active settlement vault (paid `3.539977 USDC` to Victim EOA in Verified Run #2; `1.460023 USDC` reserve remaining) |
+| **Arc Testnet** | `SimulationRegistry` v2 Escrow + Expiry | `0x31d51d7d05CE62030CBABF57D0f5376b86C70E77` | Escrow dispute window (`flagDispute` / `resolveDispute`) + claim expiry tracking (verified in txs [`0x5f858712…`](https://explorer.testnet.arc.io/tx/0x5f858712f594e689444cdbe11ba57e1742af70afbd01f73ef1ff3946230f3d34), [`0x0915cb01…`](https://explorer.testnet.arc.io/tx/0x0915cb01c4c655e6d219d6c31c6b67edbd0d6eb8d12743aae1b81cfb55daba60), [`0x8aa76387…`](https://explorer.testnet.arc.io/tx/0x8aa763876c395f41829a1e5ffcfbe1acda5d567401615f2669b20fa96f91801d)) |
+| **Arc Testnet** | `RebateVault` v2 Escrow + Expiry | `0x0897Cc21DaD8aC9Fe5Deb4971e2f8c390E7BE104` | Enforces `DisputeWindowActive`, `AttestationDisputed`, `ClaimExpired`, and `expireUnclaimedRebate` on-chain USDC reserve recycling |
+| **Arc Testnet** | `SimulationRegistry` v1 (Foundry, retired) | `0xb8416cb4d82BA72b70C3EC55d7AC66b5DB415CF8` | Retired (used by verified run #1; attestation `0x50ab85ca…d9eec9`) |
+| **Arc Testnet** | `RebateVault` v1 (Foundry, retired) | `0x2ab745F51002Ce236A9A2dA81cDaA553B87f28CD` | Retired (used by verified run #1; paid `3.571583 USDC` in `0x4202622d…a4963f`, remaining `1.428417 USDC` migrated to v2) |
+| **Arc Testnet** | `SimulationRegistry` (Arc Studio) | `0x52794Da13E573c9e73D32248a286843418Ba2983` | Generated, tested and deployed in Arc Studio (v1 schema) |
+| **Arc Testnet** | `RebateVault` (Arc Studio) | `0x676065eb7c72ddf2048f21e6cb2ca6721827c1de` | Generated, tested and deployed in Arc Studio (v1 schema) |
 | **Arc Testnet** | Arc native USDC (ERC-20) | `0x3600000000000000000000000000000000000000` | Native 6-decimal USDC interface |
 | **Arkiv (Rabdi, 7794095)** | Namespace | `darktrace.v1` | `ExtractionReceipt` / `SearcherProfile` / `LPClaim` |
 | **Arkiv (Rabdi, 7794095)** | Writer wallet | `0xb491fe5846DE735B6Cb03a677A3C6296FAB0aDA5` | Only entities owned by this wallet are trusted on read |
-| **Arkiv (Rabdi, 7794095)** | Sample entity key | `0xc327d5db4aa3098b80dc8729d090317408f98d19e1e19c13d6cf83494a05f8ca` | Viewable on `rabdi.explorer.arkiv.network` |
+| **Arkiv (Rabdi, 7794095)** | Verified run #2 receipt entity (v2) | `0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27) |
+| **Arkiv (Rabdi, 7794095)** | Verified run #2 claim entity (v2) | `0x45dcfc2de3a9b1e6738ef67dcfa323c202f28683da820c35cf0f27d3b6d89a35` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x45dcfc2de3a9b1e6738ef67dcfa323c202f28683da820c35cf0f27d3b6d89a35) |
+| **Arkiv (Rabdi, 7794095)** | Verified run #1 receipt entity (v1) | `0x837ad00cd5fba8b67ba3976cbbca64de32d4ddac8483bb6b56b6866f67b432a8` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x837ad00cd5fba8b67ba3976cbbca64de32d4ddac8483bb6b56b6866f67b432a8) |
+| **Arkiv (Rabdi, 7794095)** | Verified run #1 claim entity (v1) | `0x20d3a7149d2912642cc7dedf994454a48dc6c1f480bb81bf007de5c788985fd5` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0x20d3a7149d2912642cc7dedf994454a48dc6c1f480bb81bf007de5c788985fd5) |
+| **Arkiv (Rabdi, 7794095)** | Sample entity key | `0xc327d5db4aa3098b80dc8729d090317408f98d19e1e19c13d6cf83494a05f8ca` | Viewable on [`rabdi.explorer.arkiv.network`](https://rabdi.explorer.arkiv.network/entity/0xc327d5db4aa3098b80dc8729d090317408f98d19e1e19c13d6cf83494a05f8ca) |
 
 ---
 
@@ -175,13 +184,15 @@ pnpm arkiv:write-test   # needs ARKIV_PRIVATE_KEY: writes one receipt and reads 
 - **Settlement asset:** Arc native USDC (`0x3600…0000`, 6 decimals).
 - **What the vault enforces:**
   - **only the victim can claim (v2):** each attestation names a `beneficiary` (the wallet that signed the victim's swap), and `claimRebate` reverts with `NotBeneficiary` for anyone else, so knowing a receipt hash is not enough to take its rebate. The beneficiary chooses where the USDC goes.
+  - **escrow dispute window (`disputeWindowSeconds`):** attestations are claimable only after `claimableAt = attestedAt + disputeWindowSeconds`. Authorized challengers or the owner can call `flagDispute(receiptHash, reason)` in the window (`AttestationDisputed`), and the owner can uphold (with adjusted USDC) or revoke via `resolveDispute`.
+  - **claim expiry & on-chain reserve recycling (`claimExpirySeconds`):** unclaimed rebates expire at `expiresAt = claimableAt + claimExpirySeconds` (`ClaimExpired`). Anyone can call `expireUnclaimedRebate(receiptHash)` after expiry to recycle unclaimed rebate liabilities back into the vault's active USDC reserve (`totalExpiredUSDC` vs `totalClaimedUSDC` tracked on-chain).
   - pays only against a receipt attested in `SimulationRegistry`
   - never pays more than the attested amount
   - pays each receipt at most once (replay nullifier)
   - checks-effects-interactions with a reentrancy guard
   - blocks self-payout
-- **Live app settlement:** Studio's deployer key cannot be exported, so the live app uses a Foundry deployment of the registry and vault (funded with 5.00 USDC). Details: [`arc-studio/report.md`](arc-studio/report.md).
-- **v1 → v2 migration:** the v1 Foundry vault (`0x2ab7…28CD`) did not check who was claiming. [`DeployArcV2.s.sol`](contracts/script/DeployArcV2.s.sol) deploys the beneficiary-gated registry and vault and moves the remaining reserve across. Until v2 addresses are listed in the table above, the live app still settles on v1. The indexer detects the registry version and attests with a beneficiary on v2.
+- **Live app settlement vs. Arc Studio deployment:** Arc Studio deploys from a cloud-custodied key (`0x5B12Ce46C7194aD57d143bC22847224047b1Ef42`) that cannot be exported and provides no post-deploy console to call `transferOwnership(0xb491…aDA5)`. Because `recordSimulation` is `onlyOwner`, the live app and indexer (`0xb491…aDA5`) settle against our self-custodied Foundry v2 deployment (`0xd501…61a2` / `0x238d…4d5b`, funded with 5.00 USDC), while the v2 Escrow + Claim Expiry contracts (`0x31d5…0E77` / `0x0897…E104`) and [`arc-studio/prompt.md`](arc-studio/prompt.md) carry the full dispute-window and expiry suite. Details: [`arc-studio/report.md`](arc-studio/report.md).
+- **v1 → v2 migration:** the v1 Foundry vault (`0x2ab7…28CD`) did not check who was claiming. [`DeployArcV2.s.sol`](contracts/script/DeployArcV2.s.sol) deployed the beneficiary-gated v2 registry (`0xd501…61a2`) and vault (`0x238d…4d5b`), and the remaining `1.428417 USDC` reserve was migrated from v1 to v2 ([withdraw tx](https://explorer.testnet.arc.io/tx/0xacb28962d8b908e7a74ecea07f0fb036dfa4b694dba63fac1e47a89eb755c503) → [deposit tx](https://explorer.testnet.arc.io/tx/0xb8ac54e9d1c3cd73804330d6fe0e67f5712056768a9d7ca8b36089c13e3d36fa)). The indexer detects the registry version and attests with a beneficiary on v2.
 
 ---
 
@@ -236,23 +247,39 @@ Visit [`/demo`](https://darktrace-lovat.vercel.app/demo) for a guided forensic w
 PRIVATE_KEY=0x… pnpm e2e:real    # the DarkTrace writer wallet (0xb491…aDA5)
 ```
 
-1. **Base Sepolia:** [`E2ESandwich.s.sol`](contracts/script/E2ESandwich.s.sol) creates a tUSDC/tWETH pool on the deployed `DarkTraceHook` and executes frontrun → victim → backrun.
-   - The searcher and the victim use different router contracts, because in v4 the hook's `sender` is the router.
-   - All three swaps land in one transaction, which guarantees the same block and the right order.
-2. **Hook:** emits `ExtractionDetected` naming the searcher and victim routers.
-3. **Indexer:** [`onchain.ts`](apps/indexer/src/onchain.ts) rebuilds the three swaps and the pre-attack price from the PoolManager's `Swap` events alone, then runs the CPMM counterfactual.
-4. **Arkiv + Arc:** seals the `ExtractionReceipt` on Arkiv and attests it in `SimulationRegistry`.
-5. **Rebate:** [`claim.ts`](apps/indexer/src/claim.ts) claims the attested USDC from `RebateVault`.
+1. **Arc v2 vault top-up & separate identities:** [`e2e-sandwich.ts`](apps/indexer/src/e2e-sandwich.ts) ensures `RebateVault` v2 holds `5.00 USDC` and prepares two distinct funded accounts: the searcher/operator (`0xb491…aDA5`) and a separate Victim EOA (`0x524e…51Db`, `beneficiary ≠ operator`).
+2. **Base Sepolia (3 separate transactions in one block):** broadcasts `tx1` (operator frontrun via `searcherRouter`), `tx2` (Victim EOA swap via `victimRouter`), and `tx3` (operator backrun via `searcherRouter`) ordered by priority fee in a single block.
+3. **Hook:** `tx3` emits `ExtractionDetected` naming the searcher and victim routers.
+4. **Indexer:** [`onchain.ts`](apps/indexer/src/onchain.ts) rebuilds the three swaps from `PoolManager` `Swap` events, resolves `victimOrigin = getTransaction(tx2).from` (`0x524e…51Db`), and runs the CPMM counterfactual.
+5. **Arkiv + Arc v2:** seals the `ExtractionReceipt` on Arkiv and attests it in `SimulationRegistry` v2 with `beneficiary = 0x524e…51Db`.
+6. **Beneficiary-gated rebate:** [`claim.ts`](apps/indexer/src/claim.ts) first proves that the operator (`0xb491…aDA5`) reverts with `NotBeneficiary` when attempting `claimRebate`, then signs `claimRebate` with the Victim EOA (`0x524e…51Db`) and seals the `LPClaim` on Arkiv.
 
-### Verified run (Nov 6, 2026)
+### Verified run #2 (v2 — separate searcher & victim EOAs, settled on Arc v2)
+
+| Step | Network | Evidence |
+| :--- | :--- | :--- |
+| Vault top-up: `RebateVault` v2 (`0x238d…4d5b`) topped up by `3.571583 USDC` (`1.43 → 5.00 USDC`) | Arc Testnet | [`0x001aa60f…5563de`](https://explorer.testnet.arc.io/tx/0x001aa60f8d4338aa66c25ff981d6c960b17e6f11bcaa9dcc2b61693ad55563de) |
+| Frontrun (`tx1`, idx 2): Operator `0xb491…aDA5` swaps `200 tUSDC → tWETH` via `searcherRouter` | Base Sepolia, block 55,152,258 | [`0xa9a12ef2…8ba48c`](https://sepolia.basescan.org/tx/0xa9a12ef232d1df4a38a56cf10ef5566f71a36798b4b4109eebf89a05658ba48c) ([Blockscout](https://base-sepolia.blockscout.com/tx/0xa9a12ef232d1df4a38a56cf10ef5566f71a36798b4b4109eebf89a05658ba48c)) |
+| Victim swap (`tx2`, idx 3): **Victim EOA `0x524e…51Db`** swaps `1,000 tUSDC → tWETH` via `victimRouter` | Base Sepolia, block 55,152,258 | [`0x23984ec7…a772c4`](https://sepolia.basescan.org/tx/0x23984ec70d7fc514697be40d8bb7500941ecbed350181a75b7fcb79e7ea772c4) ([Blockscout](https://base-sepolia.blockscout.com/tx/0x23984ec70d7fc514697be40d8bb7500941ecbed350181a75b7fcb79e7ea772c4)) |
+| Backrun (`tx3`, idx 4): Operator `0xb491…aDA5` swaps `0.06518 tWETH → tUSDC`; `DarkTraceHook` emits `ExtractionDetected` (`proofHash 0x63c9…97d7`) | Base Sepolia, block 55,152,258 | [`0x6dd63c93…84f5d9`](https://sepolia.basescan.org/tx/0x6dd63c93a3945d7f737b64350f480cbafc3a5032b0442b3dbef4c6d72f84f5d9) ([Blockscout](https://base-sepolia.blockscout.com/tx/0x6dd63c93a3945d7f737b64350f480cbafc3a5032b0442b3dbef4c6d72f84f5d9)) |
+| `ExtractionReceipt` sealed: **3.54 USDC** loss, 35 bps injected / 90 bps legit, 3 distinct `txHashes`, `lp = 0x524e…51Db` | Arkiv Rabdi | [`$key 0x2286e8a0…5d27`](https://rabdi.explorer.arkiv.network/entity/0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27) · [receipt view](https://darktrace-lovat.vercel.app/receipt/0xe191f885168d1d06b6c7d27ef00504d58f7661c7da5adc8c3a79aaf8bb72959a) |
+| `SimulationRegistry` v2 (`0xd501…61a2`) `recordSimulation`: `3,539,977` raw USDC attested to `beneficiary = 0x524e061C89036b12a4f377bD8999038Da3A551Db` | Arc Testnet | [`0xf4e1fa19…744ca4`](https://explorer.testnet.arc.io/tx/0xf4e1fa19d88a7151ba7c2d43a525daafecffca1e29d290a7eb4059d521744ca4) |
+| `RebateVault` v2 (`0x238d…4d5b`) `NotBeneficiary` guard: Operator `0xb491…aDA5` claim attempt **reverts `NotBeneficiary` on-chain** | Arc Testnet | [`0xef11bca9…dca8eb`](https://explorer.testnet.arc.io/tx/0xef11bca9a7f4b64983a2404834cdf1c817c1aeda334a73f0958cfa3aeddca8eb) |
+| `RebateVault` v2 (`0x238d…4d5b`) `claimRebate`: **Victim EOA `0x524e…51Db` claims 3.539977 USDC**, reserve `5.00 → 1.460023 USDC` | Arc Testnet | [`0xb72bd280…f1fd00`](https://explorer.testnet.arc.io/tx/0xb72bd280acafa1f1cec3f6738066070e1bc0940408348ed530fb54b39df1fd00) |
+| `LPClaim` sealed: links receipt `0xe191…959a` (`lp 0x524e…51Db`) to Arc claim tx `0xb72b…fd00` (status `REBATED`) | Arkiv Rabdi | [`$key 0x45dcfc2d…9a35`](https://rabdi.explorer.arkiv.network/entity/0x45dcfc2de3a9b1e6738ef67dcfa323c202f28683da820c35cf0f27d3b6d89a35) |
+
+Both the searcher EOA (`0xb491…aDA5`) and the victim EOA (`0x524e…51Db`) are scripted by [`e2e-sandwich.ts`](apps/indexer/src/e2e-sandwich.ts) for repeatable testnet verification, but they sign separate transactions from separate wallets so `beneficiary ≠ operator` is enforced end-to-end on-chain.
+
+### Verified run #1 (Nov 6, 2026 — settled on Arc v1)
 
 | Step | Network | Evidence |
 | :--- | :--- | :--- |
 | Sandwich bundle: frontrun 200 → victim 1,000 → backrun, all tUSDC. Searcher +2.43 tUSDC after fees | Base Sepolia, block 55,113,190 | [`0x1adc35cf…a410b4`](https://sepolia.basescan.org/tx/0x1adc35cf1d5c726c853dea8de8401cc52d07689e7c52770b5b543c1ea3a410b4) ([Blockscout](https://base-sepolia.blockscout.com/tx/0x1adc35cf1d5c726c853dea8de8401cc52d07689e7c52770b5b543c1ea3a410b4)) |
 | `DarkTraceHook` emits `ExtractionDetected`: searcher `0xc315…940D`, victim `0x9428…2488` | Base Sepolia | Same tx, pool `0x2183dce5…c676c` |
 | `ExtractionReceipt` sealed: **3.57 USDC** loss, 36 bps injected / 91 bps legit, real tx hashes | Arkiv Rabdi | [`$key 0x837ad00c…32a8`](https://rabdi.explorer.arkiv.network/entity/0x837ad00cd5fba8b67ba3976cbbca64de32d4ddac8483bb6b56b6866f67b432a8) · [receipt view](https://darktrace-lovat.vercel.app/receipt/0xdf3305cb8962998d3f887ad00ee3d206948d4b36703f6be39c9e65c9dee4e681) |
-| `SimulationRegistry.recordSimulation`: 3,571,583 raw USDC attested | Arc Testnet | [`0x50ab85ca…d9eec9`](https://explorer.testnet.arc.io/tx/0x50ab85caa05a7e52e9b9e5b498faf8c67981c1ba013060a068f7ef43cfd9eec9) |
-| `RebateVault.claimRebate`: **3.571583 USDC paid**, reserve 5.00 → 1.43 | Arc Testnet | [`0x4202622d…a4963f`](https://explorer.testnet.arc.io/tx/0x4202622d97af28edd3439a8f3f5ab773524755362357aa22d4c6bfb100a4963f) |
+| `SimulationRegistry` (v1) `recordSimulation`: 3,571,583 raw USDC attested | Arc Testnet | [`0x50ab85ca…d9eec9`](https://explorer.testnet.arc.io/tx/0x50ab85caa05a7e52e9b9e5b498faf8c67981c1ba013060a068f7ef43cfd9eec9) |
+| `RebateVault` (v1) `claimRebate`: **3.571583 USDC paid**, reserve 5.00 → 1.43 | Arc Testnet | [`0x4202622d…a4963f`](https://explorer.testnet.arc.io/tx/0x4202622d97af28edd3439a8f3f5ab773524755362357aa22d4c6bfb100a4963f) |
+| `LPClaim` sealed: links receipt `0xdf33…e681` to Arc claim tx `0x4202…963f` (status `REBATED`) | Arkiv Rabdi | [`$key 0x20d3a714…5fd5`](https://rabdi.explorer.arkiv.network/entity/0x20d3a7149d2912642cc7dedf994454a48dc6c1f480bb81bf007de5c788985fd5) |
 
 Both sides of this sandwich are controlled by the operator. It is a scripted, real on-chain attack for verification, sized so that the searcher profits after fees and the victim's loss (about $3.6) is fully repayable from the vault reserve.
 
@@ -272,6 +299,8 @@ All contracts, tokens and data feeds run on Base Sepolia, Arc Testnet and Arkiv 
 - **Arc Studio package & test report:** [`arc-studio/report.md`](arc-studio/report.md)
 - **Arkiv integration package:** [`arkiv/README.md`](arkiv/README.md)
 - **Final submission checklist:** [`specs/submission/FINAL-SUBMISSION-CHECKLIST.md`](specs/submission/FINAL-SUBMISSION-CHECKLIST.md)
+- **Booth Q&A sheet:** [`specs/submission/qa-prep.md`](specs/submission/qa-prep.md)
+- **2–3 min video script:** [`specs/06-demo-script.md`](specs/06-demo-script.md)
 
 ---
 
@@ -286,6 +315,7 @@ The full specifications are in [`/specs`](specs):
 - [`05-ui-ux.md`](specs/05-ui-ux.md): forensic terminal styling guidelines
 - [`06-demo-script.md`](specs/06-demo-script.md): 3-minute video script
 - [`07-deployment.md`](specs/07-deployment.md): reproducible deployment instructions
+- [`08-hook-threat-model.md`](specs/08-hook-threat-model.md): Hook v1 → v2 threat model, false-positive/false-negative analysis, and gas benchmarks
 
 ---
 

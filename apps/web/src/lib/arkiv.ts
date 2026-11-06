@@ -1,10 +1,19 @@
 // Server-side data layer: every receipt the web app shows is read live from Arkiv Rabdi
 // through @darktrace/arkiv (official @arkiv-network/sdk). Never import this from a client component.
-import { arkiv, type ArkivReceipt, type ArkivLPClaim, ARKIV_EXPLORER } from "@darktrace/arkiv";
+import {
+  arkiv,
+  type ArkivReceipt,
+  type ArkivLPClaim,
+  type ArkivSearcherProfile,
+  ARKIV_EXPLORER,
+  isSyntheticReceipt,
+  RECEIPT_TTL_DAYS,
+  OPEN_CLAIM_TTL_DAYS,
+} from "@darktrace/arkiv";
 import { MOCK_POOLS } from "@/data/mockData";
 import { unstable_noStore as noStore } from "next/cache";
 
-export { ARKIV_EXPLORER };
+export { ARKIV_EXPLORER, isSyntheticReceipt, RECEIPT_TTL_DAYS, OPEN_CLAIM_TTL_DAYS, type ArkivSearcherProfile };
 
 const ARKIV_TIMEOUT_MS = 8_000;
 
@@ -15,6 +24,8 @@ export interface ReceiptView {
   owner: string;
   createdAtBlock: string;
   expiresAtBlock: string;
+  hasExtendedExpiry: boolean;
+  isSynthetic: boolean;
   poolId: string;
   poolName: string;
   searcher: string;
@@ -40,6 +51,7 @@ export function poolName(poolId: string): string {
 }
 
 export function toView(r: ArkivReceipt, claim?: ArkivLPClaim | null): ReceiptView {
+  const lifetimeBlocks = r.expiresAtBlock > r.createdAtBlock ? r.expiresAtBlock - r.createdAtBlock : BigInt(0);
   return {
     receiptHash: r.receiptHash,
     arkivEntityKey: r.arkivEntityKey,
@@ -47,6 +59,8 @@ export function toView(r: ArkivReceipt, claim?: ArkivLPClaim | null): ReceiptVie
     owner: r.owner,
     createdAtBlock: r.createdAtBlock.toString(),
     expiresAtBlock: r.expiresAtBlock.toString(),
+    hasExtendedExpiry: lifetimeBlocks > BigInt(2_000_000),
+    isSynthetic: isSyntheticReceipt(r),
     poolId: r.poolId,
     poolName: poolName(r.poolId),
     searcher: r.searcher,
@@ -61,6 +75,17 @@ export function toView(r: ArkivReceipt, claim?: ArkivLPClaim | null): ReceiptVie
     status: claim ? "REBATED" : "ARCHIVED",
     claimTx: claim?.claimTx,
   };
+}
+
+/** Joins receipts with their LPClaim (by receiptHash) so REBATED status matches across every page. */
+export async function toViewsWithClaims(
+  sdk: Pick<ReturnType<typeof arkiv>, "listLPClaims">,
+  receipts: ArkivReceipt[]
+): Promise<ReceiptView[]> {
+  if (receipts.length === 0) return [];
+  const claims = await sdk.listLPClaims();
+  const byReceipt = new Map(claims.map((c) => [c.receiptHash.toLowerCase(), c]));
+  return receipts.map((r) => toView(r, byReceipt.get(r.receiptHash.toLowerCase())));
 }
 
 /** Runs an Arkiv read with a timeout; failures are reported, never replaced with mock data. */

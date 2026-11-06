@@ -13,7 +13,10 @@ interface IERC20Minimal {
  * @title RebateVault
  * @notice Restitution settlement vault on Arc Testnet holding USDC collateral.
  * @dev Distributes restitution to victim LPs verified against SimulationRegistry attestations.
- *      v2: only the attestation's `beneficiary` may claim; it chooses where the USDC is sent.
+ *      Enforces:
+ *        - Beneficiary-only claims (`NotBeneficiary`)
+ *        - Escrow dispute window (`DisputeWindowActive`, `AttestationDisputed`)
+ *        - Claim expiry & on-chain reserve recycling (`ClaimExpired`, `expireUnclaimedRebate`)
  */
 contract RebateVault {
     IERC20Minimal public immutable usdc;
@@ -25,16 +28,29 @@ contract RebateVault {
     uint256 private constant _ENTERED = 2;
 
     mapping(bytes32 => bool) public claimedReceipts;
+    mapping(bytes32 => bool) public expiredReceipts;
+
+    /// @notice Cumulative USDC paid out to victim beneficiaries.
+    uint256 public totalClaimedUSDC;
+
+    /// @notice Cumulative USDC from expired attestations returned to the active vault reserve.
+    uint256 public totalExpiredUSDC;
 
     event RebateClaimed(bytes32 indexed receiptHash, address indexed recipient, uint256 amountUSDC);
+    event RebateExpiredToReserve(bytes32 indexed receiptHash, uint256 expiredAmountUSDC, uint256 vaultReserveUSDC);
     event FundsDeposited(address indexed sender, uint256 amount);
     event EmergencyWithdrawn(address indexed to, uint256 amount);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     error ReentrancyGuardReentrantCall();
     error AlreadyClaimed();
+    error AlreadyExpired();
     error UnverifiedReceipt();
     error NotBeneficiary();
+    error DisputeWindowActive(uint64 claimableAt);
+    error AttestationDisputed();
+    error ClaimExpired(uint64 expiresAt);
+    error ClaimNotYetExpired(uint64 expiresAt);
     error AmountExceedsAttestation();
     error InvalidRecipient();
     error SelfPayoutBlocked();
@@ -68,11 +84,8 @@ contract RebateVault {
     /**
      * @notice Lets the attested victim claim USDC restitution against a forensic receipt.
      * @dev Reverts with NotBeneficiary unless msg.sender is the beneficiary recorded in SimulationRegistry,
-     *      so knowing a receipt hash is not enough to take its rebate.
-     * @param receiptHash Cryptographic identifier of the ExtractionReceipt.
-     * @param recipient Address the beneficiary wants the USDC sent to (e.g. itself or a fresh wallet).
-     * @param amountUSDC Amount requested (must not exceed attested extracted value).
-     * @param proofBundle Optional cryptographic payload for auditing.
+     *      with DisputeWindowActive / AttestationDisputed during an active or flagged escrow window,
+     *      and with ClaimExpired if the claim window has elapsed.
      */
     function claimRebate(
         bytes32 receiptHash,
@@ -86,21 +99,47 @@ contract RebateVault {
         if (recipient == address(0)) revert InvalidRecipient();
         if (recipient == address(this)) revert SelfPayoutBlocked();
         if (claimedReceipts[receiptHash]) revert AlreadyClaimed();
+        if (expiredReceipts[receiptHash]) revert AlreadyExpired();
 
         (bool verified, uint256 attestedAmount, ) = simulationRegistry.getAttestation(receiptHash);
         if (!verified) revert UnverifiedReceipt();
         if (msg.sender != simulationRegistry.beneficiaryOf(receiptHash)) revert NotBeneficiary();
-        if (amountUSDC > attestedAmount) revert AmountExceedsAttestation();
 
+        (, uint64 claimableAt, uint64 expiresAt, bool disputed) = simulationRegistry.getEscrowState(receiptHash);
+        if (disputed) revert AttestationDisputed();
+        if (uint64(block.timestamp) < claimableAt) revert DisputeWindowActive(claimableAt);
+        if (expiresAt != 0 && uint64(block.timestamp) > expiresAt) revert ClaimExpired(expiresAt);
+
+        if (amountUSDC > attestedAmount) revert AmountExceedsAttestation();
         if (usdc.balanceOf(address(this)) < amountUSDC) revert InsufficientVaultBalance();
 
         // Mark receipt as claimed before external call (Checks-Effects-Interactions)
         claimedReceipts[receiptHash] = true;
+        totalClaimedUSDC += amountUSDC;
 
         bool success = usdc.transfer(recipient, amountUSDC);
         if (!success) revert TransferFailed();
 
         emit RebateClaimed(receiptHash, recipient, amountUSDC);
+    }
+
+    /**
+     * @notice Recycles an unclaimed attestation back to the vault's active USDC reserve after `expiresAt`.
+     */
+    function expireUnclaimedRebate(bytes32 receiptHash) external nonReentrant {
+        if (claimedReceipts[receiptHash]) revert AlreadyClaimed();
+        if (expiredReceipts[receiptHash]) revert AlreadyExpired();
+
+        (bool verified, uint256 attestedAmount, ) = simulationRegistry.getAttestation(receiptHash);
+        if (!verified) revert UnverifiedReceipt();
+
+        (, , uint64 expiresAt, ) = simulationRegistry.getEscrowState(receiptHash);
+        if (expiresAt == 0 || uint64(block.timestamp) <= expiresAt) revert ClaimNotYetExpired(expiresAt);
+
+        expiredReceipts[receiptHash] = true;
+        totalExpiredUSDC += attestedAmount;
+
+        emit RebateExpiredToReserve(receiptHash, attestedAmount, usdc.balanceOf(address(this)));
     }
 
     /**

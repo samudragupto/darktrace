@@ -2,9 +2,10 @@ import Link from "next/link";
 import { MOCK_POOLS } from "@/data/mockData";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { DemoData } from "@/components/ui/DemoData";
+import { HashDisplay } from "@/components/ui/HashDisplay";
 import { ArkivSource } from "@/components/arkiv/ArkivSource";
 import { ReceiptsTable } from "@/components/arkiv/ReceiptsTable";
-import { fromArkiv, sumUSDC, toView, writerAddress } from "@/lib/arkiv";
+import { fromArkiv, sumUSDC, toViewsWithClaims, writerAddress } from "@/lib/arkiv";
 import { getVaultReserveUSDC } from "@/lib/arc";
 
 // Always read Arkiv at request time — never bake receipts into the build.
@@ -12,13 +13,45 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const [res, vaultReserve] = await Promise.all([
-    fromArkiv((sdk) => sdk.listRecentReceipts(25)),
+    fromArkiv(async (sdk) => toViewsWithClaims(sdk, await sdk.listRecentReceipts(25))),
     getVaultReserveUSDC(),
   ]);
-  const receipts = res.ok ? res.data.map((r) => toView(r)) : [];
+  const receipts = res.ok ? res.data : [];
   const totalExtracted = sumUSDC(receipts);
   const extractedByPool = (poolId: string) =>
     sumUSDC(receipts.filter((r) => r.poolId.toLowerCase() === poolId.toLowerCase()));
+
+  // Aggregate Searcher Leaderboard from live Arkiv receipts
+  const leaderboardMap = new Map<
+    string,
+    {
+      searcher: string;
+      extractions: number;
+      totalExtracted: number;
+      rebatedCount: number;
+      lastSeenBlock: number;
+      isSynthetic: boolean;
+    }
+  >();
+  for (const r of receipts) {
+    const key = r.searcher.toLowerCase();
+    const cur = leaderboardMap.get(key) ?? {
+      searcher: r.searcher,
+      extractions: 0,
+      totalExtracted: 0,
+      rebatedCount: 0,
+      lastSeenBlock: 0,
+      isSynthetic: r.isSynthetic,
+    };
+    cur.extractions += 1;
+    cur.totalExtracted += parseFloat(r.extractedUSDC) || 0;
+    if (r.status === "REBATED") cur.rebatedCount += 1;
+    if (r.blockNumber > cur.lastSeenBlock) cur.lastSeenBlock = r.blockNumber;
+    leaderboardMap.set(key, cur);
+  }
+  const leaderboard = Array.from(leaderboardMap.values()).sort(
+    (a, b) => Number(a.isSynthetic) - Number(b.isSynthetic) || b.totalExtracted - a.totalExtracted
+  );
 
   return (
     <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
@@ -118,7 +151,7 @@ export default async function DashboardPage() {
           ok={res.ok}
           queriedAt={res.queriedAt}
           error={res.ok ? undefined : res.error}
-          query="select * from receipts ownedBy(writer) orderBy blockNumber desc limit 25"
+          query="select * from receipts ownedBy(writer) orderBy blockNumber desc limit 25 · lp_claims"
           count={res.ok ? receipts.length : undefined}
           writer={writerAddress()}
         />
@@ -127,6 +160,69 @@ export default async function DashboardPage() {
           columns={["pool", "searcher", "victim"]}
           emptyText="No extraction receipts on Arkiv yet."
         />
+      </div>
+
+      {/* Searcher Leaderboard (aggregated from Arkiv receipts) */}
+      <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <div className="text-xs font-mono font-semibold text-text uppercase tracking-wider">
+            Searcher Leaderboard (Live from Arkiv Receipts)
+          </div>
+          <div className="text-[11px] font-mono text-muted">
+            Ranked by cumulative extracted USDC across monitored pools
+          </div>
+        </div>
+        {leaderboard.length === 0 ? (
+          <div className="border border-border rounded bg-surface p-6 text-center text-xs font-mono text-muted">
+            No searcher activity recorded on Arkiv.
+          </div>
+        ) : (
+          <div className="border border-border rounded bg-surface overflow-x-auto">
+            <table className="w-full text-xs font-mono text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border text-muted bg-[#15181E] select-none">
+                  <th className="py-2.5 px-3 font-semibold">Rank</th>
+                  <th className="py-2.5 px-3 font-semibold">Searcher Bot</th>
+                  <th className="py-2.5 px-3 font-semibold text-right">Sandwiches</th>
+                  <th className="py-2.5 px-3 font-semibold text-right">Total Extracted</th>
+                  <th className="py-2.5 px-3 font-semibold text-right">Rebated to Victims</th>
+                  <th className="py-2.5 px-3 font-semibold text-right">Last Seen Block</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {leaderboard.map((row, idx) => (
+                  <tr key={row.searcher} className="hover:bg-[#181B20] transition-colors">
+                    <td className="py-2.5 px-3 text-muted tabular-nums">#{idx + 1}</td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-2">
+                        <Link href={`/searcher/${row.searcher}`} className="hover:underline">
+                          <HashDisplay hash={row.searcher} className="text-text hover:text-accent" />
+                        </Link>
+                        {row.isSynthetic && (
+                          <span className="px-1.5 py-0.5 text-[10px] border border-accent/40 bg-accent/10 text-accent rounded font-semibold uppercase">
+                            FIXTURE
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 text-right text-text font-semibold tabular-nums">
+                      {row.extractions}
+                    </td>
+                    <td className="py-2.5 px-3 text-right text-danger font-bold tabular-nums">
+                      ${row.totalExtracted.toFixed(2)} USDC
+                    </td>
+                    <td className="py-2.5 px-3 text-right text-good tabular-nums">
+                      {row.rebatedCount} / {row.extractions}
+                    </td>
+                    <td className="py-2.5 px-3 text-right text-muted tabular-nums">
+                      #{row.lastSeenBlock}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

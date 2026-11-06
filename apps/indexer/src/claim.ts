@@ -1,11 +1,22 @@
 // Final leg of the real end-to-end run: find the sealed receipt on Arkiv, wait for its Arc
 // attestation, then claim the USDC restitution from RebateVault.
 //
-// Usage: pnpm --filter @darktrace/indexer claim <poolId> <baseBlockNumber> [recipient] [existingClaimTx]
+// Usage: pnpm --filter @darktrace/indexer claim <poolId> <baseBlockNumber> [recipient] [existingClaimTx] [--as-victim] [--prove-revert-tx]
 //   existingClaimTx: backfill the Arkiv LPClaim for a rebate that was already claimed on Arc.
-// Env:   ARKIV_PRIVATE_KEY (or ARC_PRIVATE_KEY) — the wallet that sends the claim on Arc.
+//   --as-victim:     prove operator's claim attempt reverts NotBeneficiary, then claim with Victim EOA.
+// Env:   ARKIV_PRIVATE_KEY (or ARC_PRIVATE_KEY / VICTIM_PRIVATE_KEY) — the wallet that sends the claim on Arc.
 import "dotenv/config";
-import { createPublicClient, createWalletClient, defineChain, http, parseAbi, type Hex } from "viem";
+import {
+  concatHex,
+  createPublicClient,
+  createWalletClient,
+  defineChain,
+  http,
+  keccak256,
+  parseAbi,
+  toHex,
+  type Hex,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { arkiv, normalizePrivateKey } from "@darktrace/arkiv";
 
@@ -25,18 +36,37 @@ const ABI = parseAbi([
   "function beneficiaryOf(bytes32) view returns (address)",
   "function claimRebate(bytes32 receiptHash, address recipient, uint256 amountUSDC, bytes proofBundle)",
   "function balanceOf(address) view returns (uint256)",
+  "error NotBeneficiary()",
 ]);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+function resolveVictimKey(operatorKey: Hex): Hex {
+  const envVictim = normalizePrivateKey(process.env.VICTIM_PRIVATE_KEY);
+  if (envVictim) return envVictim;
+  return keccak256(concatHex([operatorKey, toHex("darktrace:victim-eoa:v2")]));
+}
+
 async function main() {
-  const [poolId, blockArg, recipientArg, existingClaimTx] = process.argv.slice(2);
+  const rawArgs = process.argv.slice(2);
+  const flags = new Set(rawArgs.filter((a) => a.startsWith("--")));
+  const positional = rawArgs.filter((a) => !a.startsWith("--"));
+  const [poolId, blockArg, recipientArg, existingClaimTx] = positional;
   if (!poolId || !blockArg) {
-    console.error("usage: claim <poolId> <baseBlockNumber> [recipient]");
+    console.error("usage: claim <poolId> <baseBlockNumber> [recipient] [existingClaimTx] [--as-victim] [--prove-revert-tx]");
     process.exit(1);
   }
-  const key = normalizePrivateKey(process.env.ARC_PRIVATE_KEY) || normalizePrivateKey(process.env.ARKIV_PRIVATE_KEY);
-  if (!key) throw new Error("set ARKIV_PRIVATE_KEY (or ARC_PRIVATE_KEY) to the claiming wallet's key");
-  const account = privateKeyToAccount(key);
+
+  const operatorKey = normalizePrivateKey(process.env.ARKIV_PRIVATE_KEY) || normalizePrivateKey(process.env.PRIVATE_KEY);
+  const useVictim = flags.has("--as-victim") || process.env.CLAIM_AS_VICTIM === "1" || Boolean(process.env.VICTIM_PRIVATE_KEY);
+  const proveRevertTx = flags.has("--prove-revert-tx") || process.env.PROVE_REVERT_TX === "1";
+
+  const claimKey =
+    normalizePrivateKey(process.env.ARC_PRIVATE_KEY) ||
+    (useVictim && operatorKey ? resolveVictimKey(operatorKey) : operatorKey);
+  if (!claimKey) throw new Error("set ARKIV_PRIVATE_KEY (or ARC_PRIVATE_KEY) to the claiming wallet's key");
+
+  const account = privateKeyToAccount(claimKey);
+  const operatorAccount = operatorKey ? privateKeyToAccount(operatorKey) : null;
   const recipient = (recipientArg || account.address) as Hex;
 
   // 1. The receipt as sealed on Arkiv (whichever indexer wrote it).
@@ -64,10 +94,60 @@ async function main() {
   const beneficiary = await arc
     .readContract({ address: REGISTRY, abi: ABI, functionName: "beneficiaryOf", args: [rh] })
     .catch(() => null); // v1 registry: no beneficiary binding
-  if (beneficiary && beneficiary.toLowerCase() !== account.address.toLowerCase()) {
-    throw new Error(`only the beneficiary ${beneficiary} can claim this rebate (signer is ${account.address})`);
+
+  // If operator is distinct from beneficiary, prove that operator's claim attempt reverts NotBeneficiary.
+  if (
+    beneficiary &&
+    operatorAccount &&
+    operatorAccount.address.toLowerCase() !== beneficiary.toLowerCase()
+  ) {
+    let revertedNotBeneficiary = false;
+    try {
+      await arc.simulateContract({
+        address: VAULT,
+        abi: ABI,
+        functionName: "claimRebate",
+        args: [rh, operatorAccount.address, att[1], "0x"],
+        account: operatorAccount,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("NotBeneficiary")) {
+        revertedNotBeneficiary = true;
+        console.log(
+          `Verified NotBeneficiary guard: operator ${operatorAccount.address} cannot claim receipt ${rh} (sole beneficiary is ${beneficiary})`
+        );
+      } else {
+        throw err;
+      }
+    }
+    if (!revertedNotBeneficiary) {
+      throw new Error(`Expected operator ${operatorAccount.address} claim simulation to revert with NotBeneficiary`);
+    }
+
+    if (proveRevertTx) {
+      try {
+        const opWallet = createWalletClient({ chain: arcTestnet, transport: http(), account: operatorAccount });
+        const revTx = await opWallet.writeContract({
+          address: VAULT,
+          abi: ABI,
+          functionName: "claimRebate",
+          args: [rh, operatorAccount.address, att[1], "0x"],
+          gas: 100_000n,
+        });
+        const revReceipt = await arc.waitForTransactionReceipt({ hash: revTx });
+        console.log(`On-chain NotBeneficiary revert tx (operator ${operatorAccount.address}): ${revTx} (status=${revReceipt.status})`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.log(`RPC rejected reverting operator tx at ingress with NotBeneficiary (${msg.slice(0, 120)})`);
+      }
+    }
   }
-  if (beneficiary) console.log(`Beneficiary: ${beneficiary} (signer matches)`);
+
+  if (beneficiary && beneficiary.toLowerCase() !== account.address.toLowerCase()) {
+    throw new Error(`NotBeneficiary: only the beneficiary ${beneficiary} can claim this rebate (signer is ${account.address})`);
+  }
+  if (beneficiary) console.log(`Beneficiary: ${beneficiary} (signer ${account.address} matches)`);
 
   if (await arc.readContract({ address: VAULT, abi: ABI, functionName: "claimedReceipts", args: [rh] })) {
     console.log("Already claimed on Arc.");
@@ -76,16 +156,23 @@ async function main() {
     return;
   }
 
-  // 3. Claim the full attested amount.
-  const before = await arc.readContract({ address: USDC, abi: ABI, functionName: "balanceOf", args: [VAULT] });
+  // 3. Claim the full attested amount as the beneficiary.
+  const [before, vicBefore] = await Promise.all([
+    arc.readContract({ address: USDC, abi: ABI, functionName: "balanceOf", args: [VAULT] }),
+    arc.readContract({ address: USDC, abi: ABI, functionName: "balanceOf", args: [recipient] }),
+  ]);
   const wallet = createWalletClient({ chain: arcTestnet, transport: http(), account });
   const tx = await wallet.writeContract({ address: VAULT, abi: ABI, functionName: "claimRebate", args: [rh, recipient, att[1], "0x"] });
   const mined = await arc.waitForTransactionReceipt({ hash: tx });
   if (mined.status !== "success") throw new Error(`claimRebate reverted (tx ${tx})`);
-  const after = await arc.readContract({ address: USDC, abi: ABI, functionName: "balanceOf", args: [VAULT] });
+  const [after, vicAfter] = await Promise.all([
+    arc.readContract({ address: USDC, abi: ABI, functionName: "balanceOf", args: [VAULT] }),
+    arc.readContract({ address: USDC, abi: ABI, functionName: "balanceOf", args: [recipient] }),
+  ]);
 
   console.log(`\nRebate claimed: ${Number(att[1]) / 1e6} USDC -> ${recipient}`);
   console.log(`Vault reserve: ${Number(before) / 1e6} -> ${Number(after) / 1e6} USDC`);
+  console.log(`Victim USDC:   ${Number(vicBefore) / 1e6} -> ${Number(vicAfter) / 1e6} USDC`);
   console.log(`Arc tx: ${tx}`);
   await recordClaimOnArkiv(rh, recipient, tx);
 }

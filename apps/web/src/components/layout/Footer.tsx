@@ -7,7 +7,13 @@ export function Footer() {
       explorerUrl: "https://sepolia.basescan.org/address/0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408",
     },
     {
-      name: "DarkTraceHook",
+      name: "DarkTraceHook v2",
+      network: "Base Sepolia",
+      address: "0xCeF7a999885D93f23Beeb7D319A83F2949B2c0c0",
+      explorerUrl: "https://sepolia.basescan.org/address/0xCeF7a999885D93f23Beeb7D319A83F2949B2c0c0",
+    },
+    {
+      name: "DarkTraceHook v1",
       network: "Base Sepolia",
       address: "0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0",
       explorerUrl: "https://sepolia.basescan.org/address/0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0",
@@ -28,7 +34,7 @@ export function Footer() {
 
   return (
     <footer className="w-full border-t border-border bg-surface px-4 py-2 text-[11px] font-mono text-muted flex flex-col sm:flex-row items-center justify-between gap-2">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="text-text font-semibold">DARKTRACE FORENSICS</span>
         <span>•</span>
         <span>ETHGlobal Mumbai 2026</span>
@@ -36,7 +42,7 @@ export function Footer() {
         <span>Uniswap v4 + Arc + Arkiv</span>
       </div>
 
-      <div className="flex items-center gap-4 overflow-x-auto">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
         {contracts.map((c) => (
           <a
             key={c.name}

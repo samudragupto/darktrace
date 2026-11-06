@@ -1,0 +1,23 @@
+{
+  "poolId": "0x2183dce5625ecbb1cf175be52a75b31eeed7bf7774181e3136ba49f6fc3c676c",
+  "blockNumber": 55152258,
+  "operatorEOA": "0xb491fe5846DE735B6Cb03a677A3C6296FAB0aDA5",
+  "victimEOA": "0x524e061C89036b12a4f377bD8999038Da3A551Db",
+  "frontrunTx": "0xa9a12ef232d1df4a38a56cf10ef5566f71a36798b4b4109eebf89a05658ba48c",
+  "victimTx": "0x23984ec70d7fc514697be40d8bb7500941ecbed350181a75b7fcb79e7ea772c4",
+  "backrunTx": "0x6dd63c93a3945d7f737b64350f480cbafc3a5032b0442b3dbef4c6d72f84f5d9",
+  "vaultTopUpTx": "0x001aa60f8d4338aa66c25ff981d6c960b17e6f11bcaa9dcc2b61693ad55563de",
+  "victimArcFundTx": "0xf121a42e3a1dc13fec29eb8dab98a2563663bba45c9a836ae3bf7f4e7e2c011a",
+  "receiptHash": "0xe191f885168d1d06b6c7d27ef00504d58f7661c7da5adc8c3a79aaf8bb72959a",
+  "simulationHash": "0x4f3ff115bb8b9e3b8be8608769eb3ad77cba4f8c03de95115f2ef357dd0297cd",
+  "extractedUSDC": "3.54",
+  "extractedUSDCRaw": 3539977,
+  "injectedSlippageBps": 35,
+  "legitSlippageBps": 90,
+  "arkivReceiptEntityKey": "0x2286e8a00e389f51ea21e3d5280f2078b54b4b2456842783962416c1a9dd5d27",
+  "arkivReceiptTxHash": "0xef493d0d271e00410a48bc8f5a64fb6ccf37d7a9a884f4ed81c0445f2ef349f3",
+  "arcAttestationTx": "0xf4e1fa19d88a7151ba7c2d43a525daafecffca1e29d290a7eb4059d521744ca4",
+  "arcOperatorRevertTx": "0xef11bca9a7f4b64983a2404834cdf1c817c1aeda334a73f0958cfa3aeddca8eb",
+  "arcVictimClaimTx": "0xb72bd280acafa1f1cec3f6738066070e1bc0940408348ed530fb54b39df1fd00",
+  "arkivLPClaimEntityKey": "0x45dcfc2de3a9b1e6738ef67dcfa323c202f28683da820c35cf0f27d3b6d89a35"
+}

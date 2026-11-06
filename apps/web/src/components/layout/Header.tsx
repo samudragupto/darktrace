@@ -14,14 +14,14 @@ export function Header() {
   ];
 
   return (
-    <header className="h-10 w-full bg-surface border-b border-border px-4 flex items-center justify-between text-xs select-none">
-      <div className="flex items-center space-x-6">
+    <header className="min-h-10 w-full bg-surface border-b border-border px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs select-none">
+      <div className="flex items-center gap-3 sm:gap-6">
         <Link href="/" className="font-mono font-bold tracking-wider text-text flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-accent inline-block"></span>
           DARKTRACE
         </Link>
         <span className="text-border">|</span>
-        <nav className="flex items-center space-x-4">
+        <nav className="flex items-center space-x-3 sm:space-x-4">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -41,8 +41,10 @@ export function Header() {
         </nav>
       </div>
 
-      <div className="flex items-center space-x-3">
-        <NetworkBadge />
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="hidden md:block">
+          <NetworkBadge />
+        </div>
 
         <ConnectButton.Custom>
           {({ account, chain: activeChain, openConnectModal, openAccountModal, mounted }) => {

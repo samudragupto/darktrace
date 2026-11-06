@@ -17,20 +17,25 @@ export default async function LPPage({ params }: LPPageProps) {
   const valid = /^0x[0-9a-fA-F]{40}$/.test(params.address);
   const res = valid
     ? await fromArkiv(async (sdk) => {
-        const [receipts, claims] = await Promise.all([
+        const [partyReceipts, allClaims] = await Promise.all([
           sdk.listReceiptsByParty(params.address),
-          sdk.listLPClaims(params.address),
+          sdk.listLPClaims(),
         ]);
-        return { receipts, claims };
+        const byHash = new Map(partyReceipts.map((r) => [r.receiptHash.toLowerCase(), r]));
+        const addrLower = params.address.toLowerCase();
+        for (const c of allClaims) {
+          if (c.lp.toLowerCase() === addrLower && !byHash.has(c.receiptHash.toLowerCase())) {
+            const extra = await sdk.getReceiptByHash(c.receiptHash);
+            if (extra) byHash.set(extra.receiptHash.toLowerCase(), extra);
+          }
+        }
+        const claimsByReceipt = new Map(allClaims.map((c) => [c.receiptHash.toLowerCase(), c]));
+        const sorted = Array.from(byHash.values()).sort((a, b) => b.blockNumber - a.blockNumber);
+        return sorted.map((r) => toView(r, claimsByReceipt.get(r.receiptHash.toLowerCase())));
       })
     : { ok: false as const, error: "not a valid address", queriedAt: new Date().toISOString() };
 
-  const claims = res.ok ? res.data.claims : [];
-  const lpReceipts = res.ok
-    ? res.data.receipts.map((r) =>
-        toView(r, claims.find((c) => c.receiptHash.toLowerCase() === r.receiptHash.toLowerCase()))
-      )
-    : [];
+  const lpReceipts = res.ok ? res.data : [];
   const totalSuffered = sumUSDC(lpReceipts);
   const totalRebated = sumUSDC(lpReceipts.filter((r) => r.status === "REBATED"));
 

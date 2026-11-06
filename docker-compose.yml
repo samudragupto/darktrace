@@ -10,8 +10,8 @@ services:
       - NODE_ENV=development
       - BASE_SEPOLIA_RPC=https://sepolia.base.org
       - HOOK_ADDRESS=0xBCC9e1C474Ed195b3791f2c41EdAC2a25c5b80c0
-      - ARC_RPC_URL=https://rpc.testnet.arc.io
-      - SIMULATION_REGISTRY_ADDRESS=0xb8416cb4d82BA72b70C3EC55d7AC66b5DB415CF8
+      - ARC_RPC_URL=https://rpc.testnet.arc.network
+      - SIMULATION_REGISTRY_ADDRESS=0xd501D47b246438A18C8a0BFFCF10338CfBB661a2
       - ARKIV_RPC_URL=https://rpc.rabdi.db-chain.testnet.arkiv.network
       - ARKIV_ACCESS_KEY=local_evaluator_memory_key
       - ARKIV_DEV_MODE=memory
