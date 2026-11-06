@@ -24492,7 +24492,9 @@ var ArkivSdk = class {
     );
   }
   async listLPClaims(lp, limit = 50) {
-    const res = await this.reader().select().from(LPClaimsSchema).where(eq("lp", addr(lower(lp)))).ownedBy(this.writerAddress).limit(limit).fetch();
+    let q = this.reader().select().from(LPClaimsSchema);
+    if (lp) q = q.where(eq("lp", addr(lower(lp))));
+    const res = await q.ownedBy(this.writerAddress).limit(limit).fetch();
     return res.entities.map((row) => ({
       ...meta(row),
       lp: row.lp.value,

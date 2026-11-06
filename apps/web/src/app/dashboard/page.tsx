@@ -4,7 +4,7 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { DemoData } from "@/components/ui/DemoData";
 import { ArkivSource } from "@/components/arkiv/ArkivSource";
 import { ReceiptsTable } from "@/components/arkiv/ReceiptsTable";
-import { fromArkiv, sumUSDC, toView, writerAddress } from "@/lib/arkiv";
+import { fromArkiv, sumUSDC, toViewsWithClaims, writerAddress } from "@/lib/arkiv";
 import { getVaultReserveUSDC } from "@/lib/arc";
 
 // Always read Arkiv at request time — never bake receipts into the build.
@@ -12,10 +12,10 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const [res, vaultReserve] = await Promise.all([
-    fromArkiv((sdk) => sdk.listRecentReceipts(25)),
+    fromArkiv(async (sdk) => toViewsWithClaims(sdk, await sdk.listRecentReceipts(25))),
     getVaultReserveUSDC(),
   ]);
-  const receipts = res.ok ? res.data.map((r) => toView(r)) : [];
+  const receipts = res.ok ? res.data : [];
   const totalExtracted = sumUSDC(receipts);
   const extractedByPool = (poolId: string) =>
     sumUSDC(receipts.filter((r) => r.poolId.toLowerCase() === poolId.toLowerCase()));
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
           ok={res.ok}
           queriedAt={res.queriedAt}
           error={res.ok ? undefined : res.error}
-          query="select * from receipts ownedBy(writer) orderBy blockNumber desc limit 25"
+          query="select * from receipts ownedBy(writer) orderBy blockNumber desc limit 25 · lp_claims"
           count={res.ok ? receipts.length : undefined}
           writer={writerAddress()}
         />

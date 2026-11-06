@@ -32,3 +32,19 @@ test("writes with an invalid key fail with an actionable message", async () => {
   const bad = new ArkivSdk({ privateKey: "0x1234" });
   await assert.rejects(() => bad.writeLPClaim({ v: "1.0.0", lp: KEY.slice(0, 42), receiptHash: KEY, claimTx: KEY, createdAt: 0 }), /not 32 bytes hex/);
 });
+
+test("LPClaim lookup by receiptHash is case-insensitive and distinguishes claimed vs archived receipts", () => {
+  const claims = [
+    {
+      receiptHash: "0xDF3305CB8962998D3F887AD00EE3D206948D4B36703F6BE39C9E65C9DEE4E681",
+      lp: "0xb491fe5846de735b6cb03a677a3c6296fab0ada5",
+      claimTx: "0x4202622d97af28edd3439a8f3f5ab773524755362357aa22d4c6bfb100a4963f",
+    },
+  ];
+  const byReceipt = new Map(claims.map((c) => [c.receiptHash.toLowerCase(), c]));
+  const claimedHash = "0xdf3305cb8962998d3f887ad00ee3d206948d4b36703f6be39c9e65c9dee4e681";
+  const unclaimedHash = "0xe9e56b6adbf0cae90f08b28a0ae3dccd9fc4ece42eb7b0126e4f208646eae6ce";
+
+  assert.equal(byReceipt.has(claimedHash.toLowerCase()), true);
+  assert.equal(byReceipt.has(unclaimedHash.toLowerCase()), false);
+});

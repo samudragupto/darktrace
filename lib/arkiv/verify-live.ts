@@ -23,14 +23,16 @@ async function main() {
   console.log(`  txHashes   ${r.txHashes.length}`);
   console.log(`  explorer   ${r.explorerUrl}`);
 
-  const [recent, byPool, bySearcher] = await Promise.all([
+  const [recent, byPool, bySearcher, claims] = await Promise.all([
     sdk.listRecentReceipts(10),
     sdk.listReceiptsByPool(r.poolId),
     sdk.listReceiptsBySearcher(r.searcher),
+    sdk.listLPClaims(),
   ]);
   console.log(`RECENT_OK ${recent.length} receipt(s)`);
   console.log(`POOL_OK ${byPool.length} receipt(s) for pool`);
   console.log(`SEARCHER_OK ${bySearcher.length} receipt(s) for searcher`);
+  console.log(`CLAIMS_OK ${claims.length} claim(s)`);
 }
 
 main().catch((err) => {

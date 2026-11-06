@@ -42,11 +42,11 @@ Each page shows a purple **"Live from Arkiv Rabdi"** strip naming the query it r
 
 | Route | File | Arkiv read |
 | :--- | :--- | :--- |
-| `/dashboard` | [`apps/web/src/app/dashboard/page.tsx`](../apps/web/src/app/dashboard/page.tsx) | `listRecentReceipts(25)`: the receipts table, the total extracted, and each pool's "Extracted (Arkiv)" column |
+| `/dashboard` | [`apps/web/src/app/dashboard/page.tsx`](../apps/web/src/app/dashboard/page.tsx) | `listRecentReceipts(25)` joined with `listLPClaims()` (claimed receipts show `REBATED`), total extracted, and each pool's "Extracted (Arkiv)" column |
 | `/receipt/[hash]` | [`apps/web/src/app/receipt/[hash]/page.tsx`](../apps/web/src/app/receipt/[hash]/page.tsx) | `getReceiptByHash` (falls back to `getEntityKey`) plus `claimForReceipt`. Renders `$key`, `$owner`, created/expiry block, amounts, and the decoded `txHashes` |
-| `/pool/[id]` | [`apps/web/src/app/pool/[id]/page.tsx`](../apps/web/src/app/pool/[id]/page.tsx) | `listReceiptsByPool` |
-| `/searcher/[address]` | [`apps/web/src/app/searcher/[address]/page.tsx`](../apps/web/src/app/searcher/[address]/page.tsx) | `listReceiptsBySearcher` |
-| `/lp/[address]` | [`apps/web/src/app/lp/[address]/page.tsx`](../apps/web/src/app/lp/[address]/page.tsx) | `listReceiptsByParty` plus `listLPClaims` (a receipt with a claim shows as `REBATED`) |
+| `/pool/[id]` | [`apps/web/src/app/pool/[id]/page.tsx`](../apps/web/src/app/pool/[id]/page.tsx) | `listReceiptsByPool` joined with `listLPClaims()` |
+| `/searcher/[address]` | [`apps/web/src/app/searcher/[address]/page.tsx`](../apps/web/src/app/searcher/[address]/page.tsx) | `listReceiptsBySearcher` joined with `listLPClaims()` |
+| `/lp/[address]` | [`apps/web/src/app/lp/[address]/page.tsx`](../apps/web/src/app/lp/[address]/page.tsx) | `listReceiptsByParty` plus `listLPClaims` (matches claims by `receiptHash` and `lp` so a receipt with a claim shows as `REBATED`) |
 | `/api/stats` | [`apps/web/src/app/api/stats/route.ts`](../apps/web/src/app/api/stats/route.ts) | `listRecentReceipts(100)` aggregate, with `arkivSource: "rabdi" \| "unreachable"` |
 
 The shared data layer is [`apps/web/src/lib/arkiv.ts`](../apps/web/src/lib/arkiv.ts) (`fromArkiv()` wraps every read with an 8 s timeout and reports failures honestly). The provenance strip is [`components/arkiv/ArkivSource.tsx`](../apps/web/src/components/arkiv/ArkivSource.tsx).

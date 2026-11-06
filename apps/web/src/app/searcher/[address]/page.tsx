@@ -3,7 +3,7 @@ import { HashDisplay } from "@/components/ui/HashDisplay";
 import { DemoData } from "@/components/ui/DemoData";
 import { ArkivSource } from "@/components/arkiv/ArkivSource";
 import { ReceiptsTable } from "@/components/arkiv/ReceiptsTable";
-import { fromArkiv, sumUSDC, toView, writerAddress } from "@/lib/arkiv";
+import { fromArkiv, sumUSDC, toViewsWithClaims, writerAddress } from "@/lib/arkiv";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +17,9 @@ interface SearcherPageProps {
 export default async function SearcherPage({ params }: SearcherPageProps) {
   const valid = /^0x[0-9a-fA-F]{40}$/.test(params.address);
   const res = valid
-    ? await fromArkiv((sdk) => sdk.listReceiptsBySearcher(params.address))
+    ? await fromArkiv(async (sdk) => toViewsWithClaims(sdk, await sdk.listReceiptsBySearcher(params.address)))
     : { ok: false as const, error: "not a valid address", queriedAt: new Date().toISOString() };
-  const searcherReceipts = res.ok ? res.data.map((r) => toView(r)) : [];
+  const searcherReceipts = res.ok ? res.data : [];
   const totalExtracted = sumUSDC(searcherReceipts);
 
   return (

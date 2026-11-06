@@ -63,6 +63,17 @@ export function toView(r: ArkivReceipt, claim?: ArkivLPClaim | null): ReceiptVie
   };
 }
 
+/** Joins receipts with their LPClaim (by receiptHash) so REBATED status matches across every page. */
+export async function toViewsWithClaims(
+  sdk: Pick<ReturnType<typeof arkiv>, "listLPClaims">,
+  receipts: ArkivReceipt[]
+): Promise<ReceiptView[]> {
+  if (receipts.length === 0) return [];
+  const claims = await sdk.listLPClaims();
+  const byReceipt = new Map(claims.map((c) => [c.receiptHash.toLowerCase(), c]));
+  return receipts.map((r) => toView(r, byReceipt.get(r.receiptHash.toLowerCase())));
+}
+
 /** Runs an Arkiv read with a timeout; failures are reported, never replaced with mock data. */
 export async function fromArkiv<T>(fn: (sdk: ReturnType<typeof arkiv>) => Promise<T>): Promise<ArkivResult<T>> {
   // viem sends JSON-RPC as fetch POSTs, which Next.js would otherwise store in its Data Cache

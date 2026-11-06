@@ -5,7 +5,7 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { DemoData } from "@/components/ui/DemoData";
 import { ArkivSource } from "@/components/arkiv/ArkivSource";
 import { ReceiptsTable } from "@/components/arkiv/ReceiptsTable";
-import { fromArkiv, sumUSDC, toView, writerAddress } from "@/lib/arkiv";
+import { fromArkiv, sumUSDC, toViewsWithClaims, writerAddress } from "@/lib/arkiv";
 import { ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -29,8 +29,8 @@ export default async function PoolPage({ params }: PoolPageProps) {
     token1: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   };
 
-  const res = await fromArkiv((sdk) => sdk.listReceiptsByPool(params.id));
-  const poolReceipts = res.ok ? res.data.map((r) => toView(r)) : [];
+  const res = await fromArkiv(async (sdk) => toViewsWithClaims(sdk, await sdk.listReceiptsByPool(params.id)));
+  const poolReceipts = res.ok ? res.data : [];
   const extracted = sumUSDC(poolReceipts);
 
   return (
